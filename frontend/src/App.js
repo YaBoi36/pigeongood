@@ -880,7 +880,13 @@ const MyPigeons = () => {
                   />
                 </div>
               </div>
-              <Button onClick={handleAddPigeon} className="w-full">Add Pigeon</Button>
+              <Button 
+                onClick={handleAddPigeon} 
+                className="w-full"
+                disabled={!newPigeon.country || !newPigeon.ring_number || !newPigeon.name || !newPigeon.gender}
+              >
+                Add Pigeon
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
