@@ -471,6 +471,38 @@ async def get_pigeon_stats(ring_number: str):
         total_distance=total_distance
     )
 
+@api_router.delete("/race-results/{result_id}")
+async def delete_race_result(result_id: str):
+    result = await db.race_results.delete_one({"id": result_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Race result not found")
+    return {"message": "Race result deleted successfully"}
+
+@api_router.delete("/races/{race_id}")
+async def delete_race(race_id: str):
+    # Delete all race results for this race first
+    await db.race_results.delete_many({"race_id": race_id})
+    
+    # Delete the race
+    result = await db.races.delete_one({"id": race_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Race not found")
+    return {"message": "Race and all its results deleted successfully"}
+
+@api_router.post("/clear-test-data")
+async def clear_test_data():
+    """Clear all test data from database"""
+    races_deleted = await db.races.delete_many({})
+    results_deleted = await db.race_results.delete_many({})
+    pigeons_deleted = await db.pigeons.delete_many({})
+    
+    return {
+        "message": "Test data cleared successfully",
+        "races_deleted": races_deleted.deleted_count,
+        "results_deleted": results_deleted.deleted_count,
+        "pigeons_deleted": pigeons_deleted.deleted_count
+    }
+
 @api_router.get("/dashboard-stats")
 async def get_dashboard_stats():
     # Get total counts
