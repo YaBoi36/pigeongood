@@ -522,6 +522,16 @@ const RaceResults = () => {
                     <p className="font-semibold">{result.coefficient.toFixed(0)}</p>
                     <p className="text-gray-500">Coefficient</p>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDeleteRaceResult(result.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
