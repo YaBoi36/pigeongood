@@ -448,13 +448,15 @@ const RaceResults = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Wins</p>
-                <p className="text-3xl font-bold text-green-600">6</p>
+                <p className="text-3xl font-bold text-green-600">{dashboardStats.total_wins || 0}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Medal className="w-6 h-6 text-green-600" />
               </div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">Win rate: 25%</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Win rate: {dashboardStats.total_results > 0 ? Math.round((dashboardStats.total_wins / dashboardStats.total_results * 100)) : 0}%
+            </p>
           </CardContent>
         </Card>
 
