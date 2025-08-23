@@ -255,16 +255,28 @@ const RaceResults = () => {
                   id="file-upload"
                   type="file" 
                   accept=".txt"
-                  onChange={handleFileUpload}
+                  onChange={handleFileSelect}
                   disabled={uploading}
                 />
               </div>
+              {selectedFile && (
+                <div className="flex items-center space-x-2 text-green-600">
+                  <span>File selected: {selectedFile.name}</span>
+                </div>
+              )}
               {uploading && (
                 <div className="flex items-center space-x-2 text-blue-600">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                   <span>Processing file...</span>
                 </div>
               )}
+              <Button 
+                onClick={handleInitialUpload} 
+                disabled={!selectedFile || uploading}
+                className="w-full"
+              >
+                Upload and Parse File
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
