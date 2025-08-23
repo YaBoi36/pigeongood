@@ -389,9 +389,18 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
             await db.races.insert_one(race_dict)
             processed_races.append(race_obj)
             
-            # Create race results with corrected coefficient calculation
+            # Create race results with corrected coefficient calculation and duplicate prevention
+            processed_ring_numbers = set()  # Track processed ring numbers for this race
+            
             for result in results:
                 logger.info(f"Processing result: {result}")
+                
+                # Skip if we already processed this ring number for this race
+                if result['ring_number'] in processed_ring_numbers:
+                    logger.warning(f"Skipping duplicate ring number {result['ring_number']} for race {race_obj.id}")
+                    continue
+                
+                processed_ring_numbers.add(result['ring_number'])
                 
                 # Recalculate coefficient with correct formula: (place * 100) / total_pigeons_in_race
                 # Maximum 5000 pigeons in race, not maximum coefficient of 5000
