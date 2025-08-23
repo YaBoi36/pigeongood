@@ -88,7 +88,7 @@ class CompleteWorkflowTester:
         
         pigeons_to_add = [
             {
-                "ring_number": "501516325",
+                "ring_number": "BE501516325",  # Full ring number with country code
                 "name": "Golden Sky",
                 "country": "BE",
                 "gender": "Male",
@@ -96,7 +96,7 @@ class CompleteWorkflowTester:
                 "breeder": "Test User"
             },
             {
-                "ring_number": "501516025", 
+                "ring_number": "BE501516025",  # Full ring number with country code
                 "name": "Silver Arrow",
                 "country": "BE",
                 "gender": "Female",
