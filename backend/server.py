@@ -526,6 +526,35 @@ async def delete_race(race_id: str):
         raise HTTPException(status_code=404, detail="Race not found")
     return {"message": "Race and all its results deleted successfully"}
 
+@api_router.post("/remove-duplicate-results")
+async def remove_duplicate_results():
+    """Remove duplicate race results for the same pigeon in the same race"""
+    # Find all race results grouped by race_id and ring_number
+    pipeline = [
+        {"$group": {
+            "_id": {"race_id": "$race_id", "ring_number": "$ring_number"},
+            "ids": {"$push": "$id"},
+            "count": {"$sum": 1}
+        }},
+        {"$match": {"count": {"$gt": 1}}}
+    ]
+    
+    duplicates = await db.race_results.aggregate(pipeline).to_list(1000)
+    removed_count = 0
+    
+    for duplicate in duplicates:
+        # Keep the first result, remove the rest
+        ids_to_remove = duplicate["ids"][1:]  # Skip first ID
+        for result_id in ids_to_remove:
+            await db.race_results.delete_one({"id": result_id})
+            removed_count += 1
+    
+    return {
+        "message": f"Removed {removed_count} duplicate race results",
+        "duplicates_found": len(duplicates),
+        "results_removed": removed_count
+    }
+
 @api_router.post("/clear-test-data")
 async def clear_test_data():
     """Clear all test data from database"""
