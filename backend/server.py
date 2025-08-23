@@ -198,7 +198,10 @@ def parse_race_file(content: str) -> Dict[str, Any]:
                             time = part
                     
                     # Calculate coefficient: (position * 100) / total_pigeons, max 5000
-                    coefficient = min((position * 100) / current_race['total_pigeons'], 5000)
+                    if current_race['total_pigeons'] > 0:
+                        coefficient = min((position * 100) / current_race['total_pigeons'], 5000)
+                    else:
+                        coefficient = 5000  # Default max coefficient if total_pigeons is 0
                     
                     result = {
                         'ring_number': ring_number.replace(' ', ''),
