@@ -546,6 +546,11 @@ def main():
     test_results.append(tester.test_get_race_results())
     test_results.append(tester.test_get_pigeon_stats())
     
+    # PRIORITY TESTS - Cascade Deletion and Ring Number Matching
+    print("\n" + "🎯" * 20 + " PRIORITY TESTS " + "🎯" * 20)
+    test_results.append(tester.test_cascade_deletion())
+    test_results.append(tester.test_ring_number_matching())
+    
     # Cleanup
     test_results.append(tester.test_delete_pigeon())
     
