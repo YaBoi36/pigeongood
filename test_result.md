@@ -106,28 +106,34 @@ user_problem_statement: Fix ring number matching issue where newly added pigeons
 
 backend:
   - task: "Fix ring number parsing and matching logic"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main" 
         comment: "Ring number matching fails between TXT file parsing and registered pigeons due to format inconsistencies"
+      - working: true
+        agent: "testing"
+        comment: "FIXED: Ring number parsing and matching now works correctly. Fixed organization header detection that was incorrectly matching city names containing 'LUMMEN'. All 3 test ring numbers (BE501516325, BE501516025, BE501120725) from test_race_results.txt now properly match registered pigeons. Ring numbers with spaces in TXT files are correctly normalized and matched."
 
   - task: "Implement cascade deletion for race results when pigeons are deleted"
-    implemented: false
-    working: false
+    implemented: true
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Currently only deletes pigeon record, race results remain orphaned"
+      - working: true
+        agent: "testing"
+        comment: "WORKING: Cascade deletion is properly implemented. When a pigeon is deleted via DELETE /api/pigeons/{pigeon_id}, both the pigeon record AND all associated race results are deleted. Tested with pigeon creation, race result upload, and deletion - confirmed race results are removed when pigeon is deleted."
 
 frontend:
   - task: "Verify pigeon deletion and race result display"
