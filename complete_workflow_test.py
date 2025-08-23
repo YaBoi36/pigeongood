@@ -133,7 +133,7 @@ class CompleteWorkflowTester:
         race_results_content = """----------------------------------------------------------------------
 Data Technology Deerlijk
 ----------------------------------------------------------------------
-LUMMEN 25-08-23 2000 Jongen Deelnemers: 150 LOSTIJD: 07:30:00
+QUIEVRAIN 22-05-21 2000 Jongen Deelnemers: 150 LOSTIJD: 07:30:00
 
 NR  Naam                Ring        Afstand  Tijd      Snelheid
 ----------------------------------------------------------------------
