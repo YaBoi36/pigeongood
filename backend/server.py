@@ -445,31 +445,27 @@ async def confirm_race_upload(file: UploadFile = File(...), confirmed_pigeon_cou
 
 @api_router.get("/race-results")
 async def get_race_results(limit: int = 50):
-    results = await db.race_results.find().sort("created_at", -1).limit(limit).to_list(limit)
+    # Only get results that have matching pigeons in the database
+    results = await db.race_results.find({"pigeon_id": {"$ne": None}}).sort("created_at", -1).limit(limit).to_list(limit)
     
     detailed_results = []
     for result in results:
         result_obj = RaceResult(**parse_from_mongo(result))
         
-        # Get associated pigeon and race
-        pigeon = None
-        race = None
-        
-        if result_obj.pigeon_id:
-            pigeon_data = await db.pigeons.find_one({"id": result_obj.pigeon_id})
-            if pigeon_data:
-                pigeon = Pigeon(**parse_from_mongo(pigeon_data))
-        
+        # Get associated pigeon and race (we know pigeon exists because of the filter)
+        pigeon_data = await db.pigeons.find_one({"id": result_obj.pigeon_id})
         race_data = await db.races.find_one({"id": result_obj.race_id})
-        if race_data:
-            race = Race(**parse_from_mongo(race_data))
         
-        detailed_result = RaceResultWithDetails(
-            **result_obj.dict(),
-            pigeon=pigeon,
-            race=race
-        )
-        detailed_results.append(detailed_result)
+        if pigeon_data and race_data:  # Only include if both pigeon and race exist
+            pigeon = Pigeon(**parse_from_mongo(pigeon_data))
+            race = Race(**parse_from_mongo(race_data))
+            
+            detailed_result = RaceResultWithDetails(
+                **result_obj.dict(),
+                pigeon=pigeon,
+                race=race
+            )
+            detailed_results.append(detailed_result)
     
     return detailed_results
 
