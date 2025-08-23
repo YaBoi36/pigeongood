@@ -383,19 +383,33 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
             
             logger.info(f"Processing race: {race_info}")
             
-            # Create race
-            race_obj = Race(**race_info)
-            race_dict = prepare_for_mongo(race_obj.dict())
-            await db.races.insert_one(race_dict)
-            processed_races.append(race_obj)
+            # Check if this race already exists to prevent duplicate races
+            existing_race = await db.races.find_one({
+                "race_name": race_info['race_name'],
+                "date": race_info['date'],
+                "organization": race_info['organization'],
+                "category": race_info['category']
+            })
             
-            # Create race results with corrected coefficient calculation and robust duplicate prevention
+            if existing_race:
+                logger.info(f"Race already exists: {existing_race['id']}")
+                race_obj = Race(**parse_from_mongo(existing_race))
+                processed_races.append(race_obj)
+            else:
+                # Create new race
+                race_obj = Race(**race_info)
+                race_dict = prepare_for_mongo(race_obj.dict())
+                await db.races.insert_one(race_dict)
+                processed_races.append(race_obj)
+                logger.info(f"Created new race: {race_obj.id}")
+            
+            # Create race results with robust duplicate prevention
             for result in results:
                 logger.info(f"Processing result: {result}")
                 
                 ring_number = result['ring_number'].strip()
                 
-                # Check if this pigeon already has a result for this race
+                # Check if this pigeon already has a result for this race (using race_id)
                 existing_result = await db.race_results.find_one({
                     "race_id": race_obj.id,
                     "ring_number": ring_number
