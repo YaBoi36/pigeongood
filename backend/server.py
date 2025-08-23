@@ -419,9 +419,9 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
                     logger.warning(f"Skipping duplicate result for ring {ring_number} in race {race_obj.id}")
                     continue
                 
-                # Recalculate coefficient with correct formula: (place * 100) / total_pigeons_in_race
-                # Maximum 5000 pigeons in race, not maximum coefficient of 5000
-                actual_total_pigeons = min(race_info['total_pigeons'], 5000)  # Max 5000 pigeons in race
+                # Recalculate coefficient with correct formula using the confirmed total (not parsed total)
+                # Use the race's total_pigeons which should be the confirmed count if overridden
+                actual_total_pigeons = min(race_obj.total_pigeons, 5000)  # Use race object's total, max 5000 pigeons in race
                 if actual_total_pigeons > 0:
                     coefficient = (result['position'] * 100) / actual_total_pigeons
                 else:
