@@ -519,7 +519,7 @@ const RaceResults = () => {
                     <p className="text-gray-500">Speed</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold">{result.coefficient.toFixed(0)}</p>
+                    <p className="font-semibold">{result.coefficient.toFixed(2)}</p>
                     <p className="text-gray-500">Coefficient</p>
                   </div>
                   <div className="flex items-center space-x-2">
