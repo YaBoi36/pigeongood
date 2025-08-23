@@ -553,18 +553,100 @@ const MyPigeons = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="country">Country</Label>
-                  <Input 
-                    id="country"
-                    value={newPigeon.country}
-                    onChange={(e) => setNewPigeon({...newPigeon, country: e.target.value})}
-                    placeholder="NL"
-                  />
+                  <Select onValueChange={(value) => setNewPigeon({...newPigeon, country: value})} defaultValue="NL">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BE">Belgium (BE)</SelectItem>
+                      <SelectItem value="NL">Netherlands (NL)</SelectItem>
+                      <SelectItem value="DE">Germany (DE)</SelectItem>
+                      <SelectItem value="FR">France (FR)</SelectItem>
+                      <SelectItem value="GB">United Kingdom (GB)</SelectItem>
+                      <SelectItem value="DV">DV (Special)</SelectItem>
+                      <SelectItem value="US">United States (US)</SelectItem>
+                      <SelectItem value="CA">Canada (CA)</SelectItem>
+                      <SelectItem value="AU">Australia (AU)</SelectItem>
+                      <SelectItem value="ZA">South Africa (ZA)</SelectItem>
+                      <SelectItem value="CN">China (CN)</SelectItem>
+                      <SelectItem value="JP">Japan (JP)</SelectItem>
+                      <SelectItem value="TW">Taiwan (TW)</SelectItem>
+                      <SelectItem value="TH">Thailand (TH)</SelectItem>
+                      <SelectItem value="PH">Philippines (PH)</SelectItem>
+                      <SelectItem value="MY">Malaysia (MY)</SelectItem>
+                      <SelectItem value="SG">Singapore (SG)</SelectItem>
+                      <SelectItem value="IN">India (IN)</SelectItem>
+                      <SelectItem value="PK">Pakistan (PK)</SelectItem>
+                      <SelectItem value="BD">Bangladesh (BD)</SelectItem>
+                      <SelectItem value="LK">Sri Lanka (LK)</SelectItem>
+                      <SelectItem value="AE">UAE (AE)</SelectItem>
+                      <SelectItem value="SA">Saudi Arabia (SA)</SelectItem>
+                      <SelectItem value="EG">Egypt (EG)</SelectItem>
+                      <SelectItem value="MA">Morocco (MA)</SelectItem>
+                      <SelectItem value="TN">Tunisia (TN)</SelectItem>
+                      <SelectItem value="DZ">Algeria (DZ)</SelectItem>
+                      <SelectItem value="ES">Spain (ES)</SelectItem>
+                      <SelectItem value="PT">Portugal (PT)</SelectItem>
+                      <SelectItem value="IT">Italy (IT)</SelectItem>
+                      <SelectItem value="CH">Switzerland (CH)</SelectItem>
+                      <SelectItem value="AT">Austria (AT)</SelectItem>
+                      <SelectItem value="PL">Poland (PL)</SelectItem>
+                      <SelectItem value="CZ">Czech Republic (CZ)</SelectItem>
+                      <SelectItem value="SK">Slovakia (SK)</SelectItem>
+                      <SelectItem value="HU">Hungary (HU)</SelectItem>
+                      <SelectItem value="RO">Romania (RO)</SelectItem>
+                      <SelectItem value="BG">Bulgaria (BG)</SelectItem>
+                      <SelectItem value="GR">Greece (GR)</SelectItem>
+                      <SelectItem value="TR">Turkey (TR)</SelectItem>
+                      <SelectItem value="RU">Russia (RU)</SelectItem>
+                      <SelectItem value="UA">Ukraine (UA)</SelectItem>
+                      <SelectItem value="BY">Belarus (BY)</SelectItem>
+                      <SelectItem value="LT">Lithuania (LT)</SelectItem>
+                      <SelectItem value="LV">Latvia (LV)</SelectItem>
+                      <SelectItem value="EE">Estonia (EE)</SelectItem>
+                      <SelectItem value="FI">Finland (FI)</SelectItem>
+                      <SelectItem value="SE">Sweden (SE)</SelectItem>
+                      <SelectItem value="NO">Norway (NO)</SelectItem>
+                      <SelectItem value="DK">Denmark (DK)</SelectItem>
+                      <SelectItem value="IS">Iceland (IS)</SelectItem>
+                      <SelectItem value="IE">Ireland (IE)</SelectItem>
+                      <SelectItem value="MX">Mexico (MX)</SelectItem>
+                      <SelectItem value="AR">Argentina (AR)</SelectItem>
+                      <SelectItem value="BR">Brazil (BR)</SelectItem>
+                      <SelectItem value="CL">Chile (CL)</SelectItem>
+                      <SelectItem value="CO">Colombia (CO)</SelectItem>
+                      <SelectItem value="PE">Peru (PE)</SelectItem>
+                      <SelectItem value="VE">Venezuela (VE)</SelectItem>
+                      <SelectItem value="EC">Ecuador (EC)</SelectItem>
+                      <SelectItem value="UY">Uruguay (UY)</SelectItem>
+                      <SelectItem value="PY">Paraguay (PY)</SelectItem>
+                      <SelectItem value="BO">Bolivia (BO)</SelectItem>
+                      <SelectItem value="CR">Costa Rica (CR)</SelectItem>
+                      <SelectItem value="PA">Panama (PA)</SelectItem>
+                      <SelectItem value="GT">Guatemala (GT)</SelectItem>
+                      <SelectItem value="HN">Honduras (HN)</SelectItem>
+                      <SelectItem value="SV">El Salvador (SV)</SelectItem>
+                      <SelectItem value="NI">Nicaragua (NI)</SelectItem>
+                      <SelectItem value="BZ">Belize (BZ)</SelectItem>
+                      <SelectItem value="JM">Jamaica (JM)</SelectItem>
+                      <SelectItem value="CU">Cuba (CU)</SelectItem>
+                      <SelectItem value="DO">Dominican Republic (DO)</SelectItem>
+                      <SelectItem value="HT">Haiti (HT)</SelectItem>
+                      <SelectItem value="TT">Trinidad and Tobago (TT)</SelectItem>
+                      <SelectItem value="BB">Barbados (BB)</SelectItem>
+                      <SelectItem value="GY">Guyana (GY)</SelectItem>
+                      <SelectItem value="SR">Suriname (SR)</SelectItem>
+                      <SelectItem value="GF">French Guiana (GF)</SelectItem>
+                      <SelectItem value="FK">Falkland Islands (FK)</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="gender">Gender</Label>
                   <Select onValueChange={(value) => setNewPigeon({...newPigeon, gender: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                      <SelectValue placeholder="Select Gender" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Male">Male</SelectItem>
