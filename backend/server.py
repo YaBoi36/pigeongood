@@ -114,8 +114,8 @@ def parse_race_file(content: str) -> Dict[str, Any]:
             i += 1
             continue
             
-        # Check for organization header
-        if 'Data Technology Deerlijk' in line or 'LUMMEN' in line:
+        # Check for organization header (more specific to avoid matching city names)
+        if 'Data Technology Deerlijk' in line or ('LUMMEN' in line and 'Data Technology' in line):
             # Save previous race if exists
             if current_race and current_results:
                 races.append({
