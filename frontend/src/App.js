@@ -565,7 +565,7 @@ const MyPigeons = () => {
   const [newPigeon, setNewPigeon] = useState({
     ring_number: "",
     name: "",
-    country: "NL",
+    country: "",  // Empty by default, must be selected
     gender: "",
     color: "",
     breeder: "",
