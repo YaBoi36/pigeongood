@@ -280,6 +280,58 @@ const RaceResults = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Pigeon Count Confirmation Dialog */}
+        <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Pigeon Count</DialogTitle>
+              <DialogDescription>
+                We detected {parsedPigeonCounts.length > 0 ? parsedPigeonCounts[0] : 'unknown'} pigeons from the file. 
+                Please confirm the exact number of pigeons that participated in this race for accurate coefficient calculation.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="pigeon-count">Number of Pigeons in Race</Label>
+                <Input 
+                  id="pigeon-count"
+                  type="number"
+                  value={confirmedPigeonCount}
+                  onChange={(e) => setConfirmedPigeonCount(e.target.value)}
+                  placeholder="Enter exact number"
+                  min="1"
+                  max="5000"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  This will be used to calculate coefficients: (position × 100) ÷ total pigeons
+                </p>
+              </div>
+              {uploading && (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span>Processing race results...</span>
+                </div>
+              )}
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={handleConfirmedUpload} 
+                  disabled={!confirmedPigeonCount || uploading}
+                  className="flex-1"
+                >
+                  Confirm and Process
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setConfirmDialogOpen(false)}
+                  disabled={uploading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Top Performers */}
