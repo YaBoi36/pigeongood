@@ -737,10 +737,10 @@ const MyPigeons = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="country">Country</Label>
-                  <Select onValueChange={(value) => setNewPigeon({...newPigeon, country: value})} defaultValue="NL">
+                  <Label htmlFor="country">Country *</Label>
+                  <Select onValueChange={(value) => setNewPigeon({...newPigeon, country: value})} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Country" />
+                      <SelectValue placeholder="Select Country *" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="BE">Belgium (BE)</SelectItem>
@@ -828,10 +828,10 @@ const MyPigeons = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select onValueChange={(value) => setNewPigeon({...newPigeon, gender: value})}>
+                  <Label htmlFor="gender">Gender *</Label>
+                  <Select onValueChange={(value) => setNewPigeon({...newPigeon, gender: value})} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Gender" />
+                      <SelectValue placeholder="Select Gender *" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Male">Male</SelectItem>
