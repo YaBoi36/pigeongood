@@ -1,51 +1,878 @@
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import axios from "axios";
+import { 
+  Trophy, 
+  Bird, 
+  Upload, 
+  Search, 
+  Filter, 
+  Plus, 
+  Medal, 
+  Timer, 
+  MapPin,
+  Calendar,
+  Users,
+  Target,
+  BarChart3,
+  Eye,
+  Edit,
+  Trash2
+} from "lucide-react";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
+import { Badge } from "./components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
+import { Label } from "./components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { useToast } from "./hooks/use-toast";
+import { Toaster } from "./components/ui/toaster";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
+// Navigation Component
+const Navigation = () => {
+  const location = useLocation();
+  
+  return (
+    <nav className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Bird className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">PigeonPedigree</h1>
+              <p className="text-sm text-gray-500">Racing Performance</p>
+            </div>
+          </div>
+          
+          <div className="flex space-x-6">
+            <Link 
+              to="/race-results" 
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                location.pathname === '/race-results' 
+                  ? 'bg-blue-50 text-blue-700' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Race Results</span>
+            </Link>
+            <Link 
+              to="/my-pigeons" 
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                location.pathname === '/my-pigeons' 
+                  ? 'bg-blue-50 text-blue-700' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Bird className="w-4 h-4" />
+              <span>My Pigeons</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// Race Results Page Component
+const RaceResults = () => {
+  const [dashboardStats, setDashboardStats] = useState({});
+  const [raceResults, setRaceResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchDashboardStats();
+    fetchRaceResults();
+  }, []);
+
+  const fetchDashboardStats = async () => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      const response = await axios.get(`${API}/dashboard-stats`);
+      setDashboardStats(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  const fetchRaceResults = async () => {
+    try {
+      const response = await axios.get(`${API}/race-results`);
+      setRaceResults(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching race results:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setUploading(true);
+    try {
+      const response = await axios.post(`${API}/upload-race-results`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      toast({
+        title: "Success!",
+        description: response.data.message,
+      });
+      
+      setUploadDialogOpen(false);
+      fetchDashboardStats();
+      fetchRaceResults();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to upload file",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Race Results</h1>
+          <p className="text-gray-500 mt-1">Track and analyze your pigeons' racing performance with detailed statistics and insights.</p>
+        </div>
+        
+        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Upload className="w-4 h-4 mr-2" />
+              Add New Result
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload Race Results</DialogTitle>
+              <DialogDescription>
+                Upload a TXT file containing race results to automatically populate pigeon performance data.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="file-upload">Select TXT File</Label>
+                <Input 
+                  id="file-upload"
+                  type="file" 
+                  accept=".txt"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
+              </div>
+              {uploading && (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span>Processing file...</span>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Top Performers */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {dashboardStats.top_performers?.map((performer, index) => (
+          <Card key={performer.ring_number} className="relative overflow-hidden">
+            <div className={`absolute top-0 left-0 w-full h-1 ${
+              index === 0 ? 'bg-yellow-400' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'
+            }`}></div>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{performer.name}</CardTitle>
+                <Badge variant="secondary" className={`${
+                  index === 0 ? 'bg-yellow-100 text-yellow-800' : 
+                  index === 1 ? 'bg-gray-100 text-gray-800' : 
+                  'bg-orange-100 text-orange-800'
+                }`}>
+                  {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} Top Performer
+                </Badge>
+              </div>
+              <CardDescription>Ring: {performer.ring_number}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Total Wins</span>
+                  <span className="font-semibold">{performer.total_races}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Win Rate</span>
+                  <span className="font-semibold">75%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Avg Placement</span>
+                  <span className="font-semibold">{performer.best_position}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Best Speed</span>
+                  <span className="font-semibold">{performer.avg_speed} m/min</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filter Results */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Filter className="w-5 h-5" />
+            <span>Filter Results</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex space-x-4">
+            <Select>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Pigeons" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Pigeons</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="young">Young Birds</SelectItem>
+                <SelectItem value="old">Old Birds</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Button variant="outline">
+              <Search className="w-4 h-4 mr-2" />
+              Export Results
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Performance Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Races</p>
+                <p className="text-3xl font-bold text-blue-600">{dashboardStats.total_races || 0}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Trophy className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Across all categories</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Wins</p>
+                <p className="text-3xl font-bold text-green-600">6</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Medal className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Win rate: 25%</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Win Rate</p>
+                <p className="text-3xl font-bold text-purple-600">25%</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Target className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Performance rate</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Best Speed</p>
+                <p className="text-3xl font-bold text-orange-600">1,450</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Timer className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">m/min</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Race Results */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Race Results</CardTitle>
+          <CardDescription>{raceResults.length} results recorded</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {raceResults.slice(0, 10).map((result) => (
+              <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Badge variant="outline" className="text-xs font-bold">
+                      #{result.position}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{result.pigeon?.name || 'Unknown'}</h3>
+                    <p className="text-sm text-gray-500">Ring: {result.ring_number}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-8 text-sm">
+                  <div className="text-center">
+                    <p className="font-semibold">{result.race?.race_name}</p>
+                    <p className="text-gray-500">Race</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold">{result.race?.date}</p>
+                    <p className="text-gray-500">Date</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold">{(result.distance / 1000).toFixed(1)}km</p>
+                    <p className="text-gray-500">Distance</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold">{result.speed.toFixed(1)}</p>
+                    <p className="text-gray-500">Speed</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-semibold">{result.coefficient.toFixed(0)}</p>
+                    <p className="text-gray-500">Coefficient</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
+// My Pigeons Page Component  
+const MyPigeons = () => {
+  const [pigeons, setPigeons] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [addPigeonOpen, setAddPigeonOpen] = useState(false);
+  const [editPigeonOpen, setEditPigeonOpen] = useState(false);
+  const [currentPigeon, setCurrentPigeon] = useState(null);
+  const { toast } = useToast();
+
+  const [newPigeon, setNewPigeon] = useState({
+    ring_number: "",
+    name: "",
+    country: "NL",
+    gender: "",
+    color: "",
+    breeder: "",
+    sire_ring: "",
+    dam_ring: ""
+  });
+
+  useEffect(() => {
+    fetchPigeons();
+  }, [searchTerm]);
+
+  const fetchPigeons = async () => {
+    try {
+      const params = searchTerm ? { search: searchTerm } : {};
+      const response = await axios.get(`${API}/pigeons`, { params });
+      setPigeons(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching pigeons:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleAddPigeon = async () => {
+    try {
+      const response = await axios.post(`${API}/pigeons`, newPigeon);
+      setPigeons([...pigeons, response.data]);
+      setAddPigeonOpen(false);
+      setNewPigeon({
+        ring_number: "",
+        name: "",
+        country: "NL", 
+        gender: "",
+        color: "",
+        breeder: "",
+        sire_ring: "",
+        dam_ring: ""
+      });
+      toast({
+        title: "Success!",
+        description: "Pigeon added successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to add pigeon",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditPigeon = async () => {
+    try {
+      const response = await axios.put(`${API}/pigeons/${currentPigeon.id}`, currentPigeon);
+      setPigeons(pigeons.map(p => p.id === currentPigeon.id ? response.data : p));
+      setEditPigeonOpen(false);
+      setCurrentPigeon(null);
+      toast({
+        title: "Success!",
+        description: "Pigeon updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update pigeon",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeletePigeon = async (pigeonId) => {
+    if (!window.confirm("Are you sure you want to delete this pigeon?")) return;
+    
+    try {
+      await axios.delete(`${API}/pigeons/${pigeonId}`);
+      setPigeons(pigeons.filter(p => p.id !== pigeonId));
+      toast({
+        title: "Success!",
+        description: "Pigeon deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete pigeon",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">My Pigeons</h1>
+          <p className="text-gray-500 mt-1">You currently have {pigeons.length} pigeons registered. Your plan allows up to 100 pigeons.</p>
+        </div>
+        
+        <Dialog open={addPigeonOpen} onOpenChange={setAddPigeonOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Pigeon
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Pigeon</DialogTitle>
+              <DialogDescription>Register a new pigeon in your collection</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="ring_number">Ring Number</Label>
+                <Input 
+                  id="ring_number"
+                  value={newPigeon.ring_number}
+                  onChange={(e) => setNewPigeon({...newPigeon, ring_number: e.target.value})}
+                  placeholder="BE 501516325"
+                />
+              </div>
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input 
+                  id="name"
+                  value={newPigeon.name}
+                  onChange={(e) => setNewPigeon({...newPigeon, name: e.target.value})}
+                  placeholder="Golden Sky"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="country">Country</Label>
+                  <Input 
+                    id="country"
+                    value={newPigeon.country}
+                    onChange={(e) => setNewPigeon({...newPigeon, country: e.target.value})}
+                    placeholder="NL"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select onValueChange={(value) => setNewPigeon({...newPigeon, gender: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="color">Color</Label>
+                  <Input 
+                    id="color"
+                    value={newPigeon.color}
+                    onChange={(e) => setNewPigeon({...newPigeon, color: e.target.value})}
+                    placeholder="Blue"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="breeder">Breeder</Label>
+                  <Input 
+                    id="breeder"
+                    value={newPigeon.breeder}
+                    onChange={(e) => setNewPigeon({...newPigeon, breeder: e.target.value})}
+                    placeholder="John Doe"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="sire_ring">Sire Ring</Label>
+                  <Input 
+                    id="sire_ring"
+                    value={newPigeon.sire_ring}
+                    onChange={(e) => setNewPigeon({...newPigeon, sire_ring: e.target.value})}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dam_ring">Dam Ring</Label>
+                  <Input 
+                    id="dam_ring"
+                    value={newPigeon.dam_ring}
+                    onChange={(e) => setNewPigeon({...newPigeon, dam_ring: e.target.value})}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleAddPigeon} className="w-full">Add Pigeon</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex space-x-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input 
+            placeholder="Search by name, ring number, color, or breeder..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Genders" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Genders</SelectItem>
+            <SelectItem value="Male">Male</SelectItem>
+            <SelectItem value="Female">Female</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline">
+          <Filter className="w-4 h-4 mr-2" />
+          Advanced Filters
+        </Button>
+      </div>
+
+      {/* Plan Usage Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Plan Usage</p>
+                <p className="text-2xl font-bold text-blue-600">{pigeons.length}/100</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">{100 - pigeons.length} slots remaining</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Birds</p>
+                <p className="text-2xl font-bold text-green-600">{pigeons.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Bird className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Currently in loft</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Recent Additions</p>
+                <p className="text-2xl font-bold text-purple-600">2</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Plus className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">This month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pigeon Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {pigeons.map((pigeon) => (
+          <Card key={pigeon.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Bird className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{pigeon.name}</CardTitle>
+                    <CardDescription>{pigeon.ring_number}</CardDescription>
+                  </div>
+                </div>
+                <Badge variant={pigeon.gender === 'Male' ? 'default' : 'secondary'}>
+                  {pigeon.gender}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Country</span>
+                    <p className="font-semibold">{pigeon.country}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Gender</span>
+                    <p className="font-semibold">{pigeon.gender}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Color</span>
+                    <p className="font-semibold">{pigeon.color}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Breeder</span>
+                    <p className="font-semibold">{pigeon.breeder}</p>
+                  </div>
+                </div>
+                
+                {(pigeon.sire_ring || pigeon.dam_ring) && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-2">Parent Information</p>
+                    <div className="space-y-1 text-sm">
+                      {pigeon.sire_ring && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Sire</span>
+                          <span>{pigeon.sire_ring}</span>
+                        </div>
+                      )}
+                      {pigeon.dam_ring && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Dam</span>
+                          <span>{pigeon.dam_ring}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex space-x-2 pt-4">
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <Eye className="w-4 h-4 mr-1" />
+                    View Profile
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setCurrentPigeon(pigeon);
+                      setEditPigeonOpen(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDeletePigeon(pigeon.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Edit Pigeon Dialog */}
+      <Dialog open={editPigeonOpen} onOpenChange={setEditPigeonOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Pigeon</DialogTitle>
+            <DialogDescription>Update pigeon information</DialogDescription>
+          </DialogHeader>
+          {currentPigeon && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit_ring_number">Ring Number</Label>
+                <Input 
+                  id="edit_ring_number"
+                  value={currentPigeon.ring_number}
+                  onChange={(e) => setCurrentPigeon({...currentPigeon, ring_number: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_name">Name</Label>
+                <Input 
+                  id="edit_name"
+                  value={currentPigeon.name}
+                  onChange={(e) => setCurrentPigeon({...currentPigeon, name: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_country">Country</Label>
+                  <Input 
+                    id="edit_country"
+                    value={currentPigeon.country}
+                    onChange={(e) => setCurrentPigeon({...currentPigeon, country: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_gender">Gender</Label>
+                  <Select 
+                    value={currentPigeon.gender}
+                    onValueChange={(value) => setCurrentPigeon({...currentPigeon, gender: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_color">Color</Label>
+                  <Input 
+                    id="edit_color"
+                    value={currentPigeon.color}
+                    onChange={(e) => setCurrentPigeon({...currentPigeon, color: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_breeder">Breeder</Label>
+                  <Input 
+                    id="edit_breeder"
+                    value={currentPigeon.breeder}
+                    onChange={(e) => setCurrentPigeon({...currentPigeon, breeder: e.target.value})}
+                  />
+                </div>
+              </div>
+              <Button onClick={handleEditPigeon} className="w-full">Update Pigeon</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+// Main App Component
 function App() {
   return (
-    <div className="App">
+    <div className="App min-h-screen bg-gray-50">
       <BrowserRouter>
+        <Navigation />
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
+          <Route path="/" element={<RaceResults />} />
+          <Route path="/race-results" element={<RaceResults />} />
+          <Route path="/my-pigeons" element={<MyPigeons />} />
         </Routes>
+        <Toaster />
       </BrowserRouter>
     </div>
   );
