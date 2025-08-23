@@ -88,7 +88,11 @@ const RaceResults = () => {
   const [raceResults, setRaceResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [parsedPigeonCounts, setParsedPigeonCounts] = useState([]);
+  const [confirmedPigeonCount, setConfirmedPigeonCount] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -116,16 +120,59 @@ const RaceResults = () => {
     }
   };
 
-  const handleFileUpload = async (event) => {
+  const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (!file) return;
+    setSelectedFile(file);
+  };
+
+  const handleInitialUpload = async () => {
+    if (!selectedFile) return;
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', selectedFile);
     
     setUploading(true);
     try {
       const response = await axios.post(`${API}/upload-race-results`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (response.data.needs_pigeon_count_confirmation) {
+        setParsedPigeonCounts(response.data.parsed_pigeon_counts);
+        setConfirmedPigeonCount(response.data.parsed_pigeon_counts[0]?.toString() || '');
+        setUploadDialogOpen(false);
+        setConfirmDialogOpen(true);
+      } else {
+        toast({
+          title: "Success!",
+          description: response.data.message,
+        });
+        setUploadDialogOpen(false);
+        fetchDashboardStats();
+        fetchRaceResults();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to upload file",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleConfirmedUpload = async () => {
+    if (!selectedFile || !confirmedPigeonCount) return;
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('confirmed_pigeon_count', confirmedPigeonCount);
+    
+    setUploading(true);
+    try {
+      const response = await axios.post(`${API}/confirm-race-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -134,7 +181,9 @@ const RaceResults = () => {
         description: response.data.message,
       });
       
-      setUploadDialogOpen(false);
+      setConfirmDialogOpen(false);
+      setSelectedFile(null);
+      setConfirmedPigeonCount('');
       fetchDashboardStats();
       fetchRaceResults();
     } catch (error) {
@@ -145,6 +194,26 @@ const RaceResults = () => {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDeleteRaceResult = async (resultId) => {
+    if (!window.confirm("Are you sure you want to delete this race result?")) return;
+    
+    try {
+      await axios.delete(`${API}/race-results/${resultId}`);
+      toast({
+        title: "Success!",
+        description: "Race result deleted successfully",
+      });
+      fetchRaceResults();
+      fetchDashboardStats();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete race result",
+        variant: "destructive"
+      });
     }
   };
 
