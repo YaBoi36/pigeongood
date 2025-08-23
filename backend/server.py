@@ -358,10 +358,26 @@ async def update_pigeon(pigeon_id: str, pigeon_update: PigeonCreate):
 
 @api_router.delete("/pigeons/{pigeon_id}")
 async def delete_pigeon(pigeon_id: str):
-    result = await db.pigeons.delete_one({"id": pigeon_id})
-    if result.deleted_count == 0:
+    # First, get the pigeon to verify it exists and get its ring number
+    pigeon = await db.pigeons.find_one({"id": pigeon_id})
+    if not pigeon:
         raise HTTPException(status_code=404, detail="Pigeon not found")
-    return {"message": "Pigeon deleted successfully"}
+    
+    # Delete all race results associated with this pigeon (cascade deletion)
+    race_results_deleted = await db.race_results.delete_many({
+        "$or": [
+            {"pigeon_id": pigeon_id},  # Delete by pigeon_id
+            {"ring_number": pigeon["ring_number"]}  # Delete by ring number (for safety)
+        ]
+    })
+    
+    # Delete the pigeon
+    result = await db.pigeons.delete_one({"id": pigeon_id})
+    
+    return {
+        "message": "Pigeon and associated race results deleted successfully",
+        "race_results_deleted": race_results_deleted.deleted_count
+    }
 
 class RaceUploadRequest(BaseModel):
     total_pigeons_override: Optional[int] = None
