@@ -155,6 +155,37 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
                 f"Needs confirmation. Parsed count: {response.get('parsed_pigeon_counts', [])}"
             )
             
+            # Clear race data to avoid the existing race issue
+            status, clear_response = self.make_request('POST', 'clear-test-data')
+            if status == 200:
+                print(f"   Cleared race data to avoid duplicate race issue: {clear_response}")
+                
+                # Re-add pigeons since they were cleared
+                pigeons_to_add = [
+                    {
+                        "ring_number": "BE501516325",  # Full ring number with country code
+                        "name": "Golden Sky",
+                        "country": "BE",
+                        "gender": "Male",
+                        "color": "Blue",
+                        "breeder": "Test User"
+                    },
+                    {
+                        "ring_number": "BE501516025",  # Full ring number with country code
+                        "name": "Silver Arrow",
+                        "country": "BE",
+                        "gender": "Female",
+                        "color": "Silver",
+                        "breeder": "Test User"
+                    }
+                ]
+                
+                for pigeon_data in pigeons_to_add:
+                    status, response = self.make_request('POST', 'pigeons', pigeon_data)
+                    if status == 200:
+                        self.pigeon_ids.append(response['id'])
+                        print(f"   Re-added pigeon {pigeon_data['name']}")
+            
             # Confirm with 2000 pigeons as requested
             files = {
                 'file': ('race_results.txt', io.StringIO(race_results_content), 'text/plain'),
