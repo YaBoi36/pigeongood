@@ -389,19 +389,21 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
             await db.races.insert_one(race_dict)
             processed_races.append(race_obj)
             
-            # Create race results with corrected coefficient calculation and duplicate prevention
-            processed_ring_numbers = set()  # Track processed ring numbers for this race
-            
+            # Create race results with corrected coefficient calculation and robust duplicate prevention
             for result in results:
                 logger.info(f"Processing result: {result}")
                 
-                # Skip if we already processed this ring number for this race
                 ring_number = result['ring_number'].strip()
-                if ring_number in processed_ring_numbers:
-                    logger.warning(f"Skipping duplicate ring number {ring_number} for race {race_obj.id}")
-                    continue
                 
-                processed_ring_numbers.add(ring_number)
+                # Check if this pigeon already has a result for this race
+                existing_result = await db.race_results.find_one({
+                    "race_id": race_obj.id,
+                    "ring_number": ring_number
+                })
+                
+                if existing_result:
+                    logger.warning(f"Skipping duplicate result for ring {ring_number} in race {race_obj.id}")
+                    continue
                 
                 # Recalculate coefficient with correct formula: (place * 100) / total_pigeons_in_race
                 # Maximum 5000 pigeons in race, not maximum coefficient of 5000
@@ -411,20 +413,25 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
                 else:
                     coefficient = result['position'] * 100  # If no total, just use position * 100
                 
-                # Try to find matching pigeon
+                # Try to find matching pigeon in our database
                 pigeon = await db.pigeons.find_one({"ring_number": ring_number})
                 pigeon_id = pigeon['id'] if pigeon else None
                 
-                result_obj = RaceResult(
-                    race_id=race_obj.id,
-                    pigeon_id=pigeon_id,
-                    ring_number=ring_number,  # Use cleaned ring number
-                    coefficient=coefficient,  # Use recalculated coefficient
-                    **{k: v for k, v in result.items() if k not in ['coefficient', 'ring_number']}
-                )
-                result_dict = prepare_for_mongo(result_obj.dict())
-                await db.race_results.insert_one(result_dict)
-                processed_results.append(result_obj)
+                # Only create result if pigeon exists in our database
+                if pigeon_id:
+                    result_obj = RaceResult(
+                        race_id=race_obj.id,
+                        pigeon_id=pigeon_id,
+                        ring_number=ring_number,  # Use cleaned ring number
+                        coefficient=coefficient,  # Use recalculated coefficient
+                        **{k: v for k, v in result.items() if k not in ['coefficient', 'ring_number']}
+                    )
+                    result_dict = prepare_for_mongo(result_obj.dict())
+                    await db.race_results.insert_one(result_dict)
+                    processed_results.append(result_obj)
+                    logger.info(f"Created result for registered pigeon {ring_number}")
+                else:
+                    logger.info(f"Skipping result for unregistered pigeon {ring_number}")
         
         return {
             "message": f"Successfully processed {len(processed_races)} races with {len(processed_results)} results",
