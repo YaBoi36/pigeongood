@@ -357,8 +357,11 @@ async def delete_pigeon(pigeon_id: str):
         raise HTTPException(status_code=404, detail="Pigeon not found")
     return {"message": "Pigeon deleted successfully"}
 
+class RaceUploadRequest(BaseModel):
+    total_pigeons_override: Optional[int] = None
+
 @api_router.post("/upload-race-results")
-async def upload_race_results(file: UploadFile = File(...)):
+async def upload_race_results(file: UploadFile = File(...), total_pigeons_override: Optional[int] = None):
     if not file.filename.endswith('.txt'):
         raise HTTPException(status_code=400, detail="Only TXT files are allowed")
     
@@ -375,6 +378,10 @@ async def upload_race_results(file: UploadFile = File(...)):
             race_info = race_data['race']
             results = race_data['results']
             
+            # Use override if provided, otherwise use parsed value
+            if total_pigeons_override:
+                race_info['total_pigeons'] = total_pigeons_override
+            
             logger.info(f"Processing race: {race_info}")
             
             # Create race
@@ -383,9 +390,18 @@ async def upload_race_results(file: UploadFile = File(...)):
             await db.races.insert_one(race_dict)
             processed_races.append(race_obj)
             
-            # Create race results
+            # Create race results with corrected coefficient calculation
             for result in results:
                 logger.info(f"Processing result: {result}")
+                
+                # Recalculate coefficient with correct formula: (place * 100) / total_pigeons_in_race
+                # Maximum 5000 pigeons in race, not maximum coefficient of 5000
+                actual_total_pigeons = min(race_info['total_pigeons'], 5000)  # Max 5000 pigeons in race
+                if actual_total_pigeons > 0:
+                    coefficient = (result['position'] * 100) / actual_total_pigeons
+                else:
+                    coefficient = result['position'] * 100  # If no total, just use position * 100
+                
                 # Try to find matching pigeon
                 pigeon = await db.pigeons.find_one({"ring_number": result['ring_number']})
                 pigeon_id = pigeon['id'] if pigeon else None
@@ -393,7 +409,8 @@ async def upload_race_results(file: UploadFile = File(...)):
                 result_obj = RaceResult(
                     race_id=race_obj.id,
                     pigeon_id=pigeon_id,
-                    **result
+                    coefficient=coefficient,  # Use recalculated coefficient
+                    **{k: v for k, v in result.items() if k != 'coefficient'}
                 )
                 result_dict = prepare_for_mongo(result_obj.dict())
                 await db.race_results.insert_one(result_dict)
@@ -402,14 +419,19 @@ async def upload_race_results(file: UploadFile = File(...)):
         return {
             "message": f"Successfully processed {len(processed_races)} races with {len(processed_results)} results",
             "races": len(processed_races),
-            "results": len(processed_results)
+            "results": len(processed_results),
+            "needs_pigeon_count_confirmation": total_pigeons_override is None,
+            "parsed_pigeon_counts": [race_data['race']['total_pigeons'] for race_data in parsed_data['races']]
         }
     
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
 
-@api_router.get("/race-results", response_model=List[RaceResultWithDetails])
+@api_router.post("/confirm-race-upload")
+async def confirm_race_upload(file: UploadFile = File(...), confirmed_pigeon_count: int = 0):
+    """Confirm race upload with specified pigeon count"""
+    return await upload_race_results(file, confirmed_pigeon_count)
 async def get_race_results(limit: int = 50):
     results = await db.race_results.find().sort("created_at", -1).limit(limit).to_list(limit)
     
