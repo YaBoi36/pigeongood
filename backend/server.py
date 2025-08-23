@@ -236,11 +236,10 @@ def parse_race_file(content: str) -> Dict[str, Any]:
                             except ValueError:
                                 pass
                     
-                    # Calculate coefficient: (position * 100) / total_pigeons, max 5000
-                    if current_race['total_pigeons'] > 0:
-                        coefficient = min((position * 100) / current_race['total_pigeons'], 5000)
-                    else:
-                        coefficient = 5000.0
+                    # Calculate coefficient: (position * 100) / total_pigeons_in_race
+                    # Note: We limit the max pigeons in race to 5000, not the coefficient itself
+                    actual_total_pigeons = min(current_race['total_pigeons'], 5000) if current_race['total_pigeons'] > 0 else position * 10
+                    coefficient = (position * 100) / actual_total_pigeons
                     
                     if ring_number and owner_name:  # Only add if we have essential data
                         result = {
