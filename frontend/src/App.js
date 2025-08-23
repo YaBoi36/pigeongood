@@ -482,7 +482,9 @@ const RaceResults = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Best Speed</p>
-                <p className="text-3xl font-bold text-orange-600">1,450</p>
+                <p className="text-3xl font-bold text-orange-600">
+                  {dashboardStats.top_performers?.[0]?.avg_speed || 0}
+                </p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <Timer className="w-6 h-6 text-orange-600" />
