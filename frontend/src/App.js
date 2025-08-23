@@ -590,14 +590,39 @@ const MyPigeons = () => {
   };
 
   const handleAddPigeon = async () => {
+    // Validate required fields
+    if (!newPigeon.country) {
+      toast({
+        title: "Error",
+        description: "Please select a country",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!newPigeon.ring_number || !/^\d+$/.test(newPigeon.ring_number)) {
+      toast({
+        title: "Error", 
+        description: "Ring number must contain only numbers",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      const response = await axios.post(`${API}/pigeons`, newPigeon);
+      // Format ring number as COUNTRY + NUMBER
+      const formattedPigeon = {
+        ...newPigeon,
+        ring_number: newPigeon.country + newPigeon.ring_number
+      };
+      
+      const response = await axios.post(`${API}/pigeons`, formattedPigeon);
       setPigeons([...pigeons, response.data]);
       setAddPigeonOpen(false);
       setNewPigeon({
         ring_number: "",
         name: "",
-        country: "NL", 
+        country: "",
         gender: "",
         color: "",
         breeder: "",
