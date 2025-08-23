@@ -465,7 +465,9 @@ const RaceResults = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Win Rate</p>
-                <p className="text-3xl font-bold text-purple-600">25%</p>
+                <p className="text-3xl font-bold text-purple-600">
+                  {dashboardStats.total_results > 0 ? Math.round((dashboardStats.total_wins / dashboardStats.total_results * 100)) : 0}%
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Target className="w-6 h-6 text-purple-600" />
