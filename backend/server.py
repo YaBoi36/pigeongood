@@ -322,6 +322,7 @@ async def upload_race_results(file: UploadFile = File(...)):
     try:
         content = await file.read()
         content_str = content.decode('utf-8')
+        logger.info(f"Processing file with content length: {len(content_str)}")
         parsed_data = parse_race_file(content_str)
         
         processed_races = []
@@ -331,6 +332,8 @@ async def upload_race_results(file: UploadFile = File(...)):
             race_info = race_data['race']
             results = race_data['results']
             
+            logger.info(f"Processing race: {race_info}")
+            
             # Create race
             race_obj = Race(**race_info)
             race_dict = prepare_for_mongo(race_obj.dict())
@@ -339,6 +342,7 @@ async def upload_race_results(file: UploadFile = File(...)):
             
             # Create race results
             for result in results:
+                logger.info(f"Processing result: {result}")
                 # Try to find matching pigeon
                 pigeon = await db.pigeons.find_one({"ring_number": result['ring_number']})
                 pigeon_id = pigeon['id'] if pigeon else None
@@ -359,6 +363,7 @@ async def upload_race_results(file: UploadFile = File(...)):
         }
     
     except Exception as e:
+        logger.error(f"Error processing file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
 
 @api_router.get("/race-results", response_model=List[RaceResultWithDetails])
