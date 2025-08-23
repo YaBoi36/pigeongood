@@ -711,13 +711,20 @@ const MyPigeons = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="ring_number">Ring Number</Label>
+                <Label htmlFor="ring_number">Ring Number (numbers only) *</Label>
                 <Input 
                   id="ring_number"
+                  type="number"
                   value={newPigeon.ring_number}
                   onChange={(e) => setNewPigeon({...newPigeon, ring_number: e.target.value})}
-                  placeholder="BE 501516325"
+                  placeholder="501516325"
+                  required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  {newPigeon.country && newPigeon.ring_number 
+                    ? `Full ring number: ${newPigeon.country}${newPigeon.ring_number}` 
+                    : "Select country and enter numbers"}
+                </p>
               </div>
               <div>
                 <Label htmlFor="name">Name</Label>
