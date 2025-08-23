@@ -155,9 +155,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Fix ring number parsing and matching logic"
-    - "Implement cascade deletion for race results when pigeons are deleted"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
