@@ -538,10 +538,12 @@ async def get_dashboard_stats():
     # Get total counts
     total_pigeons = await db.pigeons.count_documents({})
     total_races = await db.races.count_documents({})
-    total_results = await db.race_results.count_documents({})
+    # Only count results that have matching pigeons
+    total_results = await db.race_results.count_documents({"pigeon_id": {"$ne": None}})
     
-    # Get top performers (best average speed)
+    # Get top performers (only for pigeons that exist in our database)
     pipeline = [
+        {"$match": {"pigeon_id": {"$ne": None}}},  # Only results with pigeons
         {"$group": {
             "_id": "$ring_number",
             "avg_speed": {"$avg": "$speed"},
@@ -559,13 +561,14 @@ async def get_dashboard_stats():
     enhanced_performers = []
     for performer in top_performers:
         pigeon = await db.pigeons.find_one({"ring_number": performer["_id"]})
-        enhanced_performers.append({
-            "ring_number": performer["_id"],
-            "name": pigeon["name"] if pigeon else "Unknown",
-            "avg_speed": round(performer["avg_speed"], 2),
-            "total_races": performer["total_races"],
-            "best_position": performer["best_position"]
-        })
+        if pigeon:  # Only include if pigeon still exists
+            enhanced_performers.append({
+                "ring_number": performer["_id"],
+                "name": pigeon["name"],
+                "avg_speed": round(performer["avg_speed"], 2),
+                "total_races": performer["total_races"],
+                "best_position": performer["best_position"]
+            })
     
     return {
         "total_pigeons": total_pigeons,
