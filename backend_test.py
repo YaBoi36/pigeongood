@@ -256,6 +256,252 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         )
         return success
 
+    def test_cascade_deletion(self):
+        """Test cascade deletion - create pigeon, upload race results, delete pigeon, verify both are deleted"""
+        print("\n🔍 Testing Cascade Deletion Workflow...")
+        
+        # Step 1: Create a pigeon with ring number that matches test file
+        pigeon_data = {
+            "ring_number": "BE501516325",  # Matches test_race_results.txt
+            "name": "Cascade Test Pigeon",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Blue",
+            "breeder": "Test Breeder"
+        }
+        
+        success, pigeon_response = self.run_test(
+            "Create Pigeon for Cascade Test",
+            "POST",
+            "pigeons",
+            200,
+            data=pigeon_data
+        )
+        
+        if not success or 'id' not in pigeon_response:
+            print("❌ Failed to create pigeon for cascade test")
+            return False
+            
+        test_pigeon_id = pigeon_response['id']
+        print(f"   Created test pigeon ID: {test_pigeon_id}")
+        
+        # Step 2: Upload race results that include this pigeon's ring number
+        try:
+            with open('/app/test_race_results.txt', 'r') as f:
+                txt_content = f.read()
+        except FileNotFoundError:
+            print("❌ test_race_results.txt file not found")
+            return False
+        
+        files = {
+            'file': ('test_race_results.txt', txt_content, 'text/plain')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Race Results with Test Pigeon",
+            "POST",
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if not success:
+            print("❌ Failed to upload race results")
+            return False
+        
+        # Step 3: Verify race results were created for the pigeon
+        success, results_response = self.run_test(
+            "Verify Race Results Created",
+            "GET",
+            "race-results",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get race results")
+            return False
+        
+        # Check if our pigeon has race results
+        pigeon_results = [r for r in results_response if r.get('pigeon', {}).get('id') == test_pigeon_id]
+        if not pigeon_results:
+            print("❌ No race results found for test pigeon")
+            return False
+        
+        print(f"   Found {len(pigeon_results)} race results for test pigeon")
+        
+        # Step 4: Delete the pigeon and verify cascade deletion
+        success, delete_response = self.run_test(
+            "Delete Pigeon (Cascade Deletion)",
+            "DELETE",
+            f"pigeons/{test_pigeon_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to delete pigeon")
+            return False
+        
+        # Check if cascade deletion info is in response
+        if 'race_results_deleted' in delete_response:
+            print(f"   Cascade deletion removed {delete_response['race_results_deleted']} race results")
+        
+        # Step 5: Verify pigeon is deleted
+        success, _ = self.run_test(
+            "Verify Pigeon Deleted",
+            "GET",
+            f"pigeons/{test_pigeon_id}",
+            404  # Should return 404 not found
+        )
+        
+        if not success:
+            print("❌ Pigeon was not properly deleted")
+            return False
+        
+        # Step 6: Verify race results are also deleted (cascade)
+        success, final_results = self.run_test(
+            "Verify Race Results Cascade Deleted",
+            "GET",
+            "race-results",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get race results for verification")
+            return False
+        
+        # Check that no race results exist for the deleted pigeon
+        remaining_results = [r for r in final_results if r.get('pigeon', {}).get('id') == test_pigeon_id]
+        if remaining_results:
+            print(f"❌ Cascade deletion failed - {len(remaining_results)} race results still exist")
+            return False
+        
+        print("✅ Cascade deletion test passed - pigeon and race results properly deleted")
+        return True
+
+    def test_ring_number_matching(self):
+        """Test ring number parsing and matching from TXT file"""
+        print("\n🔍 Testing Ring Number Matching...")
+        
+        # Step 1: Create pigeons with ring numbers that match test_race_results.txt
+        test_pigeons = [
+            {
+                "ring_number": "BE501516325",  # Matches "BE 501516325" in file
+                "name": "Ring Match Test 1",
+                "country": "BE",
+                "gender": "Male",
+                "color": "Blue",
+                "breeder": "Test Breeder 1"
+            },
+            {
+                "ring_number": "BE501516025",  # Matches "BE 501516025" in file
+                "name": "Ring Match Test 2", 
+                "country": "BE",
+                "gender": "Female",
+                "color": "Red",
+                "breeder": "Test Breeder 2"
+            },
+            {
+                "ring_number": "BE501120725",  # Matches "BE 501120725" in file
+                "name": "Ring Match Test 3",
+                "country": "BE", 
+                "gender": "Male",
+                "color": "Checker",
+                "breeder": "Test Breeder 3"
+            }
+        ]
+        
+        created_pigeons = []
+        for pigeon_data in test_pigeons:
+            success, response = self.run_test(
+                f"Create Pigeon {pigeon_data['ring_number']}",
+                "POST",
+                "pigeons",
+                200,
+                data=pigeon_data
+            )
+            
+            if success and 'id' in response:
+                created_pigeons.append(response['id'])
+                print(f"   Created pigeon: {pigeon_data['ring_number']} -> ID: {response['id']}")
+            else:
+                print(f"❌ Failed to create pigeon {pigeon_data['ring_number']}")
+        
+        if len(created_pigeons) != len(test_pigeons):
+            print("❌ Failed to create all test pigeons")
+            return False
+        
+        # Step 2: Upload the test_race_results.txt file
+        try:
+            with open('/app/test_race_results.txt', 'r') as f:
+                txt_content = f.read()
+        except FileNotFoundError:
+            print("❌ test_race_results.txt file not found")
+            return False
+        
+        files = {
+            'file': ('test_race_results.txt', txt_content, 'text/plain')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Test Race Results File",
+            "POST", 
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if not success:
+            print("❌ Failed to upload race results")
+            return False
+        
+        print(f"   Upload response: {upload_response}")
+        
+        # Step 3: Verify race results are properly matched to registered pigeons
+        success, results_response = self.run_test(
+            "Get Race Results After Upload",
+            "GET",
+            "race-results",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get race results")
+            return False
+        
+        # Check that results were created for our registered pigeons
+        matched_results = []
+        for result in results_response:
+            if result.get('pigeon') and result['pigeon']['id'] in created_pigeons:
+                matched_results.append(result)
+                print(f"   ✅ Matched result: Ring {result['ring_number']} -> Pigeon {result['pigeon']['name']}")
+        
+        if len(matched_results) == 0:
+            print("❌ No race results matched to registered pigeons")
+            return False
+        
+        # Step 4: Verify ring number normalization worked
+        expected_rings = ["BE501516325", "BE501516025", "BE501120725"]
+        matched_rings = [r['ring_number'] for r in matched_results]
+        
+        for expected_ring in expected_rings:
+            if expected_ring in matched_rings:
+                print(f"   ✅ Ring number {expected_ring} properly matched")
+            else:
+                print(f"   ❌ Ring number {expected_ring} not matched")
+        
+        # Cleanup - delete created pigeons
+        for pigeon_id in created_pigeons:
+            self.run_test(
+                f"Cleanup Pigeon {pigeon_id}",
+                "DELETE",
+                f"pigeons/{pigeon_id}",
+                200
+            )
+        
+        success_count = len(matched_results)
+        print(f"✅ Ring number matching test completed - {success_count} results matched")
+        return success_count > 0
+
     def test_delete_pigeon(self):
         """Test deleting a pigeon"""
         if not self.created_pigeon_id:
