@@ -200,10 +200,15 @@ const RaceResults = () => {
   };
 
   const handleDeleteRaceResult = async (resultId) => {
-    if (!window.confirm("Are you sure you want to delete this race result?")) return;
+    setResultToDelete(resultId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteRaceResult = async () => {
+    if (!resultToDelete) return;
     
     try {
-      await axios.delete(`${API}/race-results/${resultId}`);
+      await axios.delete(`${API}/race-results/${resultToDelete}`);
       toast({
         title: "Success!",
         description: "Race result deleted successfully",
@@ -216,6 +221,9 @@ const RaceResults = () => {
         description: "Failed to delete race result",
         variant: "destructive"
       });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setResultToDelete(null);
     }
   };
 
