@@ -431,6 +431,8 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
 async def confirm_race_upload(file: UploadFile = File(...), confirmed_pigeon_count: int = 0):
     """Confirm race upload with specified pigeon count"""
     return await upload_race_results(file, confirmed_pigeon_count)
+
+@api_router.get("/race-results")
 async def get_race_results(limit: int = 50):
     results = await db.race_results.find().sort("created_at", -1).limit(limit).to_list(limit)
     
