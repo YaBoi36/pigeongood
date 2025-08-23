@@ -148,9 +148,9 @@ def parse_race_file(content: str) -> Dict[str, Any]:
                 elif 'oude' in part:
                     category = "oude & jaar"
                 if 'Deelnemers:' in part:
-                    participants = int(parts[j].split(':')[1])
+                    participants = int(part.split(':')[1])
                 if 'LOSTIJD:' in part:
-                    unloading_time = parts[j].split(':')[1] + ":" + parts[j].split(':')[2]
+                    unloading_time = part.split(':')[1] + ":" + part.split(':')[2]
             
             current_race = {
                 'organization': 'De Witpen LUMMEN',
