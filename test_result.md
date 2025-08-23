@@ -101,3 +101,61 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: Fix ring number matching issue where newly added pigeons don't show race results despite having matching ring numbers in uploaded TXT files. Also implement cascade deletion so race results are removed when pigeons are deleted.
+
+backend:
+  - task: "Fix ring number parsing and matching logic"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main" 
+        comment: "Ring number matching fails between TXT file parsing and registered pigeons due to format inconsistencies"
+
+  - task: "Implement cascade deletion for race results when pigeons are deleted"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Currently only deletes pigeon record, race results remain orphaned"
+
+frontend:
+  - task: "Verify pigeon deletion and race result display"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Delete function exists but cascade deletion not implemented in backend"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Fix ring number parsing and matching logic"
+    - "Implement cascade deletion for race results when pigeons are deleted"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Identified ring number matching issue - registered pigeon BE501123125 doesn't match TXT file entries like BE 501516325. Need to fix parsing logic and add cascade deletion."
