@@ -595,8 +595,22 @@ async def get_dashboard_stats():
     # Get total counts
     total_pigeons = await db.pigeons.count_documents({})
     total_races = await db.races.count_documents({})
-    # Only count results that have matching pigeons
-    total_results = await db.race_results.count_documents({"pigeon_id": {"$ne": None}})
+    
+    # Count only results that have matching pigeons
+    all_results = await db.race_results.find().to_list(1000)
+    total_results = 0
+    valid_results = []
+    
+    for result in all_results:
+        # Check if pigeon exists
+        if result.get('pigeon_id'):
+            pigeon = await db.pigeons.find_one({"id": result['pigeon_id']})
+            if pigeon:
+                total_results += 1
+                valid_results.append(result)
+    
+    # Calculate wins (position 1) from valid results
+    total_wins = len([r for r in valid_results if r.get('position', 0) == 1])
     
     # Get top performers (only for pigeons that exist in our database)
     pipeline = [
@@ -614,7 +628,7 @@ async def get_dashboard_stats():
     
     top_performers = await db.race_results.aggregate(pipeline).to_list(3)
     
-    # Enhance with pigeon details
+    # Enhance with pigeon details and filter for existing pigeons only
     enhanced_performers = []
     for performer in top_performers:
         pigeon = await db.pigeons.find_one({"ring_number": performer["_id"]})
@@ -631,6 +645,7 @@ async def get_dashboard_stats():
         "total_pigeons": total_pigeons,
         "total_races": total_races,
         "total_results": total_results,
+        "total_wins": total_wins,
         "top_performers": enhanced_performers
     }
 
