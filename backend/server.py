@@ -204,16 +204,23 @@ def parse_race_file(content: str) -> Dict[str, Any]:
                     time = ""
                     speed = 0.0
                     
-                    # Find ring number pattern (country code + number)
+                    # Find ring number pattern (country code + number) and normalize it
                     ring_idx = -1
                     for j, part in enumerate(parts):
                         if re.match(r'^[A-Z]{2}\s*\d{6,9}', part) or (len(part) == 2 and part.isupper() and j + 1 < len(parts) and parts[j + 1].isdigit()):
                             ring_idx = j
                             if j + 1 < len(parts) and parts[j + 1].isdigit():
-                                ring_number = f"{part} {parts[j + 1]}"
+                                ring_number = f"{part}{parts[j + 1]}"  # No space between country and number
                             else:
                                 ring_number = part
                             break
+                    
+                    # Clean and normalize ring number
+                    ring_number = ring_number.replace(' ', '').strip()
+                    
+                    if not ring_number:
+                        logger.warning(f"Could not extract ring number from line: {line[:100]}")
+                        continue
                     
                     if ring_idx > 1:
                         # Owner name is before ring number
