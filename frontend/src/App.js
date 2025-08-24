@@ -1882,7 +1882,7 @@ const HealthTraining = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Health Records</p>
-                <p className="text-2xl font-bold text-red-600">0</p>
+                <p className="text-2xl font-bold text-red-600">{healthLogs.filter(log => log.type === 'health').length}</p>
                 <p className="text-sm text-gray-500">Total entries</p>
               </div>
             </div>
@@ -1897,8 +1897,8 @@ const HealthTraining = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Training Sessions</p>
-                <p className="text-2xl font-bold text-blue-600">0</p>
-                <p className="text-sm text-gray-500">This month</p>
+                <p className="text-2xl font-bold text-blue-600">{healthLogs.filter(log => log.type === 'training').length}</p>
+                <p className="text-sm text-gray-500">Total sessions</p>
               </div>
             </div>
           </CardContent>
@@ -1911,14 +1911,88 @@ const HealthTraining = () => {
                 <Calendar className="w-6 h-6 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Upcoming Reminders</p>
-                <p className="text-2xl font-bold text-orange-600">0</p>
-                <p className="text-sm text-gray-500">Next 7 days</p>
+                <p className="text-sm font-medium text-gray-600">Diet Plans</p>
+                <p className="text-2xl font-bold text-orange-600">{healthLogs.filter(log => log.type === 'diet').length}</p>
+                <p className="text-sm text-gray-500">Total plans</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Filters Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Filter className="w-5 h-5" />
+            <span>Filter Log Entries</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <Label htmlFor="search">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="search"
+                  placeholder="Title or description..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="pigeon_filter">Pigeon</Label>
+              <Select onValueChange={(value) => setFilters({...filters, pigeon: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Pigeons" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Pigeons</SelectItem>
+                  {pigeons.map((pigeon) => (
+                    <SelectItem key={pigeon.id} value={pigeon.id}>
+                      {pigeon.name || 'Unnamed'} - {pigeon.ring_number}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="dateFrom">Date From</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dateTo">Date To</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <Button variant="outline" onClick={resetFilters} className="w-full">
+                <X className="w-4 h-4 mr-2" />
+                Clear
+              </Button>
+            </div>
+          </div>
+          <div className="text-sm text-gray-500 mt-2">
+            Showing {filteredLogs.length} of {healthLogs.filter(log => log.type === activeTab).length} entries
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
