@@ -355,6 +355,32 @@ app.get('/api/race-results', async (req, res) => {
   }
 });
 
+// Upload race results file (initial upload)
+app.post('/api/upload-race-results', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ detail: 'No file uploaded' });
+    }
+    
+    const fileContent = req.file.buffer.toString('utf-8');
+    const { races, results } = parseRaceFile(fileContent);
+    
+    // Return parsing results for confirmation
+    const parsedPigeonCounts = races.map(race => race.total_pigeons);
+    
+    res.json({
+      message: 'File parsed successfully',
+      races: races.length,
+      results: results.length,
+      needs_pigeon_count_confirmation: parsedPigeonCounts.length > 1,
+      parsed_pigeon_counts: parsedPigeonCounts
+    });
+  } catch (error) {
+    console.error('Error parsing race file:', error);
+    res.status(500).json({ detail: 'Failed to parse race file' });
+  }
+});
+
 // Confirm and process race results file upload  
 app.post('/api/confirm-race-upload', upload.single('file'), async (req, res) => {
   try {
