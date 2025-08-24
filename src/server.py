@@ -201,7 +201,7 @@ def parse_race_file(content: str) -> Dict[str, Any]:
             continue
             
         # Check for race header (contains race name, date, pigeons count)
-        if re.search(r'\d{2}-\d{2}-\d{2}', line) and ('Jongen' in line or 'oude' in line or 'jaar' in line):
+        if re.search(r'\d{2}-\d{2}-\d{2}', line) and ('jongen' in line.lower() or 'oude' in line.lower() or 'jaar' in line.lower()):
             parts = line.split()
             race_name = parts[0] if parts else "Unknown"
             date = None
