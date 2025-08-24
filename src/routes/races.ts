@@ -52,7 +52,7 @@ router.delete('/race-results/:id', async (req: Request, res: Response) => {
 });
 
 // Upload and process race results file
-router.post('/upload-race-results', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/upload-race-results', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       return res.status(400).json({ detail: 'No file uploaded' });
