@@ -133,14 +133,6 @@ class HealthLog(BaseModel):
     reminder_date: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class HealthLogCreate(BaseModel):
-    pigeon_id: str
-    type: str
-    title: str
-    description: Optional[str] = None
-    date: str
-    reminder_date: Optional[str] = None
-
 class LoftLogCreate(BaseModel):
     loft_name: str  # Breeder/Loft name
     type: str  # health, training, diet
