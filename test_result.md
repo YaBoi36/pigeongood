@@ -135,6 +135,30 @@ backend:
         agent: "testing"
         comment: "WORKING: Cascade deletion is properly implemented. When a pigeon is deleted via DELETE /api/pigeons/{pigeon_id}, both the pigeon record AND all associated race results are deleted. Tested with pigeon creation, race result upload, and deletion - confirmed race results are removed when pigeon is deleted."
 
+  - task: "Implement pairing functionality for breeding management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "NEW FUNCTIONALITY WORKING: Pairing functionality fully implemented and tested. ✅ POST /api/pairings creates pairings with proper sire/dam validation (sire must be male, dam must be female) ✅ GET /api/pairings lists all pairings ✅ POST /api/pairings/{id}/result creates new pigeon from pairing with proper parent pedigree information (sire_ring, dam_ring) ✅ New pigeons from pairings appear correctly in pigeons collection ✅ Gender validation prevents invalid pairings ✅ Fixed API model issue where PairingResultCreate was needed for request body. All pairing workflow tests passed successfully."
+
+  - task: "Implement health log functionality for pigeon management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "NEW FUNCTIONALITY WORKING: Health log functionality fully implemented and tested. ✅ POST /api/health-logs creates health/training/diet logs with proper pigeon validation ✅ GET /api/health-logs lists logs with optional filtering by pigeon_id and type ✅ DELETE /api/health-logs/{id} deletes log entries successfully ✅ Proper validation prevents creating logs for non-existent pigeons (404 error) ✅ All three log types (health, training, diet) work correctly ✅ Filtering by pigeon_id and type works as expected ✅ Cascade deletion and cleanup work properly. All health log workflow tests passed successfully."
+
 frontend:
   - task: "Verify pigeon deletion and race result display"
     implemented: true
