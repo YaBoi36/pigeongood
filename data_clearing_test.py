@@ -48,7 +48,7 @@ class DataClearingTester:
     def get_system_stats(self):
         """Get current system statistics"""
         try:
-            response = requests.get(f"{API_BASE}/dashboard", timeout=10)
+            response = requests.get(f"{API_BASE}/dashboard-stats", timeout=10)
             if response.status_code == 200:
                 return response.json()
             else:
