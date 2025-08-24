@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Python wrapper to start TypeScript/Node.js server
+Python wrapper to start Node.js server
 This maintains compatibility with the existing supervisor configuration
 """
 import subprocess
@@ -19,13 +19,13 @@ signal.signal(signal.SIGTERM, signal_handler)
 signal.signal(signal.SIGINT, signal_handler)
 
 try:
-    # Change to the source directory
-    os.chdir('/app')
+    # Change to the backend directory
+    os.chdir('/app/backend')
     
-    # Start TypeScript server using ts-node
-    print("🚀 Starting TypeScript backend server...")
+    # Start Node.js server  
+    print("🚀 Starting Node.js backend server...")
     server_process = subprocess.Popen([
-        'npx', 'ts-node', 'src/server.ts'
+        'node', 'app.js'
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     
     # Forward output
@@ -37,7 +37,7 @@ except KeyboardInterrupt:
     if 'server_process' in locals():
         server_process.terminate()
 except Exception as e:
-    print(f"❌ Error starting TypeScript server: {e}")
+    print(f"❌ Error starting Node.js server: {e}")
     sys.exit(1)
 finally:
     if 'server_process' in locals():
