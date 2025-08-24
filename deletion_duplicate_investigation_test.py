@@ -15,8 +15,8 @@ import os
 import time
 from datetime import datetime
 
-# Use external URL from frontend/.env for testing
-BACKEND_URL = "https://flight-results-1.preview.emergentagent.com"
+# Use internal URL for testing since external routing has issues
+BACKEND_URL = "http://localhost:8001"
 API_BASE = f"{BACKEND_URL}/api"
 
 class DeletionDuplicateInvestigator:
