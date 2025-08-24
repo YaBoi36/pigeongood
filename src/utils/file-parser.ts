@@ -153,6 +153,16 @@ export class RaceFileParser {
   }
   
   private static extractRaceName(line: string, lines: string[], index: number): string {
+    // Check if current line has race info pattern "Location Date Count Type"
+    const raceInfoPattern = /^([A-Za-z\s]+)\s+\d{2}-\d{2}-\d{2}\s+\d{2,4}\s+([A-Za-z]+)/;
+    const match = line.match(raceInfoPattern);
+    if (match) {
+      const location = match[1].trim();
+      const category = match[2];
+      console.log('Extracted race name:', `${location} ${category}`);
+      return `${location} ${category}`;
+    }
+    
     // Try to extract race name from current line
     if (line.includes('UITSLAGEN') || line.includes('RESULTATEN') || line.includes('RESULTS')) {
       // Look in nearby lines for the actual race name
@@ -163,6 +173,7 @@ export class RaceFileParser {
             !checkLine.includes('RESULTATEN') &&
             !checkLine.includes('RESULTS') &&
             !checkLine.startsWith('NR') &&
+            !checkLine.includes('---') &&
             checkLine.length > 5 &&
             checkLine.length < 50) {
           return checkLine;
@@ -171,7 +182,7 @@ export class RaceFileParser {
     }
     
     // If current line looks like a race name (not too long, has spaces, no numbers at start)
-    if (line.length > 5 && line.length < 50 && line.includes(' ') && !/^\d/.test(line)) {
+    if (line.length > 5 && line.length < 50 && line.includes(' ') && !/^\d/.test(line) && !line.includes('---')) {
       return line.trim();
     }
     
@@ -179,6 +190,16 @@ export class RaceFileParser {
   }
   
   private static extractDate(line: string, lines: string[], index: number): string {
+    // Check current line first for pattern like "Mettet 20-08-25 357 Jongen"
+    const currentLineDate = line.match(/\b(\d{2}-\d{2}-\d{2})\b/);
+    if (currentLineDate) {
+      const dateStr = currentLineDate[1];
+      const [day, month, year] = dateStr.split('-');
+      const fullYear = `20${year}`;
+      console.log('Extracted date from current line:', `${fullYear}-${month}-${day}`);
+      return `${fullYear}-${month}-${day}`;
+    }
+    
     // Look for date patterns in current and nearby lines
     const datePattern = /(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})/;
     
@@ -232,6 +253,19 @@ export class RaceFileParser {
   }
   
   private static extractTotalPigeons(lines: string[], index: number): number {
+    // First check current line for race info pattern
+    const currentLine = lines[index];
+    if (currentLine) {
+      const raceInfoMatch = currentLine.match(/\b(\d{2,4})\s+[A-Za-z]+$/);
+      if (raceInfoMatch) {
+        const count = parseInt(raceInfoMatch[1], 10);
+        console.log('Extracted pigeon count from current line:', count);
+        if (count >= 10 && count <= 5000) {
+          return count;
+        }
+      }
+    }
+    
     // Look for total pigeon count in nearby lines
     for (let i = Math.max(0, index - 10); i <= Math.min(lines.length - 1, index + 15); i++) {
       const line = lines[i];
@@ -242,7 +276,9 @@ export class RaceFileParser {
         /(\d{2,4})\s*pigeons/i,
         /Total:\s*(\d{2,4})/i,
         /(\d{2,4})\s*deelnemers/i,
-        /(\d{2,4})\s*participants/i
+        /(\d{2,4})\s*participants/i,
+        /(\d{2,4})\s*Jongen/i,
+        /(\d{2,4})\s*Young/i
       ];
       
       for (const pattern of patterns) {
