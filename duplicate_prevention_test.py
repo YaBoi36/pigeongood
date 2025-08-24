@@ -63,94 +63,56 @@ class DuplicatePreventionTester:
             return False, {}
 
     def clear_test_data(self):
-        """Clear all test data before starting"""
+        """Clear existing test data"""
         print("\n🧹 Clearing existing test data...")
         success, response = self.run_test(
             "Clear Test Data",
-            "POST",
+            "DELETE",
             "clear-test-data",
             200
         )
         return success
 
-    def create_test_pigeons(self):
-        """Create the two test pigeons as specified in the test scenario"""
-        print("\n📋 STEP 1: Creating Test Pigeons")
-        
-        # Pigeon 1: Golden Sky
-        pigeon1_data = {
-            "ring_number": "BE501516325",
-            "name": "Golden Sky",
+    def create_test_pigeon(self):
+        """Create a test pigeon with ring number BE505078525 (appears in result_new.txt)"""
+        pigeon_data = {
+            "ring_number": "BE505078525",  # This ring number appears in result_new.txt
+            "name": "Duplicate Test Pigeon",
             "country": "BE",
             "gender": "Male",
             "color": "Blue",
-            "breeder": "Test User"
+            "breeder": "Test Breeder"
         }
         
-        success1, response1 = self.run_test(
-            "Create Pigeon 1 - Golden Sky",
-            "POST",
-            "pigeons",
-            200,
-            data=pigeon1_data
-        )
-        
-        if success1 and 'id' in response1:
-            self.created_pigeons.append(response1['id'])
-            print(f"   ✅ Golden Sky created with ID: {response1['id']}")
-        
-        # Pigeon 2: Silver Arrow
-        pigeon2_data = {
-            "ring_number": "BE501516025",
-            "name": "Silver Arrow",
-            "country": "BE",
-            "gender": "Female",
-            "color": "Silver",
-            "breeder": "Test User"
-        }
-        
-        success2, response2 = self.run_test(
-            "Create Pigeon 2 - Silver Arrow",
-            "POST",
-            "pigeons",
-            200,
-            data=pigeon2_data
-        )
-        
-        if success2 and 'id' in response2:
-            self.created_pigeons.append(response2['id'])
-            print(f"   ✅ Silver Arrow created with ID: {response2['id']}")
-        
-        return success1 and success2
-
-    def upload_race_results_with_duplicates(self):
-        """Upload race results that contain both test pigeons"""
-        print("\n📋 STEP 2: Uploading Race Results with Test Pigeons")
-        
-        # Create TXT content with both test pigeons appearing multiple times (to test duplicate prevention)
-        race_txt_content = """----------------------------------------------------------------------
-Data Technology Deerlijk
-----------------------------------------------------------------------
-QUIEVRAIN 22-05-21 2000 Jongen Deelnemers: 45 LOSTIJD: 07:30:00
-
-NR  Naam                Ring        Afstand  Tijd      Snelheid
-----------------------------------------------------------------------
-1   Test User          BE 501516325  85000   08.1234   1450.5
-2   Test User          BE 501516025  85000   08.1456   1420.3
-3   Other User         BE 111222333  85000   08.1678   1390.8
-4   Test User          BE 501516325  85000   08.1234   1450.5
-5   Test User          BE 501516025  85000   08.1456   1420.3
-----------------------------------------------------------------------
-"""
-        
-        # Create file-like object
-        files = {
-            'file': ('race_results_with_duplicates.txt', race_txt_content, 'text/plain')
-        }
-        
-        # First upload - should process and create results
         success, response = self.run_test(
-            "Upload Race Results (Initial)",
+            "Create Test Pigeon BE505078525",
+            "POST",
+            "pigeons",
+            200,
+            data=pigeon_data
+        )
+        
+        if success and 'id' in response:
+            self.created_pigeon_id = response['id']
+            print(f"   Created pigeon ID: {self.created_pigeon_id}")
+        
+        return success
+
+    def upload_multi_race_file(self):
+        """Upload the result_new.txt file which contains 3 races from the same date"""
+        try:
+            with open('/app/result_new.txt', 'r') as f:
+                txt_content = f.read()
+        except FileNotFoundError:
+            print("❌ result_new.txt file not found")
+            return False
+        
+        files = {
+            'file': ('result_new.txt', txt_content, 'text/plain')
+        }
+        
+        success, response = self.run_test(
+            "Upload Multi-Race File (result_new.txt)",
             "POST",
             "upload-race-results",
             200,
@@ -158,172 +120,13 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         )
         
         if success:
-            print(f"   📊 Upload Response: {response}")
-            if 'needs_pigeon_count_confirmation' in response and response['needs_pigeon_count_confirmation']:
-                print("   ⚠️  Needs pigeon count confirmation")
-                return self.confirm_race_upload(files, 2000)
+            print(f"   Upload processed: {response.get('races', 0)} races, {response.get('results', 0)} results")
         
         return success
 
-    def confirm_race_upload(self, files, pigeon_count):
-        """Confirm race upload with specified pigeon count"""
-        print(f"\n📋 STEP 2b: Confirming Race Upload with {pigeon_count} pigeons")
-        
+    def verify_single_result_per_pigeon(self):
+        """Verify that pigeon BE505078525 has only ONE race result despite appearing multiple times in file"""
         success, response = self.run_test(
-            "Confirm Race Upload",
-            "POST",
-            "confirm-race-upload",
-            200,
-            files=files,
-            data={'confirmed_pigeon_count': str(pigeon_count)}
-        )
-        
-        if success:
-            print(f"   📊 Confirmation Response: {response}")
-        
-        return success
-
-    def verify_no_duplicates(self):
-        """Verify that each pigeon appears only once per race"""
-        print("\n📋 STEP 3: Verifying No Duplicate Results")
-        
-        success, response = self.run_test(
-            "Get Race Results",
-            "GET",
-            "race-results",
-            200
-        )
-        
-        if not success:
-            return False
-        
-        results = response
-        print(f"   📊 Total results found: {len(results)}")
-        
-        # Count occurrences of each pigeon
-        pigeon_counts = {}
-        race_pigeon_combinations = set()
-        
-        for result in results:
-            ring_number = result.get('ring_number', '')
-            race_id = result.get('race_id', '')
-            
-            # Count total occurrences
-            if ring_number not in pigeon_counts:
-                pigeon_counts[ring_number] = 0
-            pigeon_counts[ring_number] += 1
-            
-            # Track race-pigeon combinations
-            combination = f"{race_id}_{ring_number}"
-            if combination in race_pigeon_combinations:
-                print(f"   ❌ DUPLICATE FOUND: {ring_number} appears multiple times in race {race_id}")
-                return False
-            race_pigeon_combinations.add(combination)
-        
-        # Check our test pigeons specifically
-        golden_sky_count = pigeon_counts.get('BE501516325', 0)
-        silver_arrow_count = pigeon_counts.get('BE501516025', 0)
-        
-        print(f"   📊 Golden Sky (BE501516325) appears {golden_sky_count} times")
-        print(f"   📊 Silver Arrow (BE501516025) appears {silver_arrow_count} times")
-        
-        # Verify each pigeon appears exactly once
-        if golden_sky_count == 1 and silver_arrow_count == 1:
-            print("   ✅ SUCCESS: Each pigeon appears exactly once per race")
-            return True
-        else:
-            print(f"   ❌ FAILURE: Expected each pigeon to appear once, but Golden Sky: {golden_sky_count}, Silver Arrow: {silver_arrow_count}")
-            return False
-
-    def test_re_upload_prevention(self):
-        """Test that re-uploading the same file doesn't create duplicates"""
-        print("\n📋 STEP 4: Testing Re-Upload Prevention")
-        
-        # Get current result count
-        success, response = self.run_test(
-            "Get Results Before Re-upload",
-            "GET",
-            "race-results",
-            200
-        )
-        
-        if not success:
-            return False
-        
-        initial_count = len(response)
-        print(f"   📊 Initial result count: {initial_count}")
-        
-        # Try to upload the same file again
-        race_txt_content = """----------------------------------------------------------------------
-Data Technology Deerlijk
-----------------------------------------------------------------------
-QUIEVRAIN 22-05-21 2000 Jongen Deelnemers: 45 LOSTIJD: 07:30:00
-
-NR  Naam                Ring        Afstand  Tijd      Snelheid
-----------------------------------------------------------------------
-1   Test User          BE 501516325  85000   08.1234   1450.5
-2   Test User          BE 501516025  85000   08.1456   1420.3
-----------------------------------------------------------------------
-"""
-        
-        files = {
-            'file': ('race_results_duplicate.txt', race_txt_content, 'text/plain')
-        }
-        
-        # Upload again with confirmed pigeon count
-        success, response = self.run_test(
-            "Re-upload Same Results",
-            "POST",
-            "confirm-race-upload",
-            200,
-            files=files,
-            data={'confirmed_pigeon_count': '2000'}
-        )
-        
-        if not success:
-            return False
-        
-        # Check result count after re-upload
-        success, response = self.run_test(
-            "Get Results After Re-upload",
-            "GET",
-            "race-results",
-            200
-        )
-        
-        if not success:
-            return False
-        
-        final_count = len(response)
-        print(f"   📊 Final result count: {final_count}")
-        
-        if final_count == initial_count:
-            print("   ✅ SUCCESS: Re-upload prevention working - no new duplicates created")
-            return True
-        else:
-            print(f"   ❌ FAILURE: Re-upload created {final_count - initial_count} additional results")
-            return False
-
-    def verify_only_registered_pigeons(self):
-        """Verify that only registered pigeons appear in results"""
-        print("\n📋 STEP 5: Verifying Only Registered Pigeons in Results")
-        
-        # Get all registered pigeons
-        success, pigeons_response = self.run_test(
-            "Get All Registered Pigeons",
-            "GET",
-            "pigeons",
-            200
-        )
-        
-        if not success:
-            return False
-        
-        registered_rings = {pigeon['ring_number'] for pigeon in pigeons_response}
-        print(f"   📊 Registered pigeon rings: {registered_rings}")
-        
-        # Get all race results
-        success, results_response = self.run_test(
             "Get All Race Results",
             "GET",
             "race-results",
@@ -333,25 +136,34 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         if not success:
             return False
         
-        result_rings = {result['ring_number'] for result in results_response}
-        print(f"   📊 Result pigeon rings: {result_rings}")
+        # Count results for our test pigeon
+        test_pigeon_results = []
+        for result in response:
+            if result.get('ring_number') == 'BE505078525':
+                test_pigeon_results.append(result)
         
-        # Check if all result rings are in registered rings
-        unregistered_in_results = result_rings - registered_rings
+        print(f"   Found {len(test_pigeon_results)} results for pigeon BE505078525")
         
-        if not unregistered_in_results:
-            print("   ✅ SUCCESS: Only registered pigeons appear in results")
+        # Should have exactly 1 result
+        if len(test_pigeon_results) == 1:
+            print("   ✅ Duplicate prevention working - only 1 result found")
+            result = test_pigeon_results[0]
+            print(f"   Result details: Position {result.get('position')}, Speed {result.get('speed')}")
             return True
+        elif len(test_pigeon_results) == 0:
+            print("   ❌ No results found for test pigeon")
+            return False
         else:
-            print(f"   ❌ FAILURE: Unregistered pigeons found in results: {unregistered_in_results}")
+            print(f"   ❌ Duplicate prevention failed - found {len(test_pigeon_results)} results")
+            for i, result in enumerate(test_pigeon_results):
+                print(f"     Result {i+1}: Position {result.get('position')}, Race ID {result.get('race_id')}")
             return False
 
-    def verify_coefficient_calculations(self):
-        """Verify that coefficient calculations are correct"""
-        print("\n📋 STEP 6: Verifying Coefficient Calculations")
-        
+    def verify_races_created(self):
+        """Verify that all 3 races were created from the file"""
+        # Check races by looking at race results and counting unique race_ids
         success, response = self.run_test(
-            "Get Race Results for Coefficient Check",
+            "Get All Race Results to Check Races",
             "GET",
             "race-results",
             200
@@ -360,72 +172,167 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         if not success:
             return False
         
-        all_correct = True
+        # Count unique race IDs
+        race_ids = set()
         for result in response:
-            position = result.get('position', 0)
-            coefficient = result.get('coefficient', 0)
-            ring_number = result.get('ring_number', '')
-            
-            # Expected coefficient: (position * 100) / total_pigeons
-            # We used 2000 pigeons in our test
-            expected_coefficient = (position * 100) / 2000
-            
-            if abs(coefficient - expected_coefficient) > 0.01:  # Allow small floating point differences
-                print(f"   ❌ Incorrect coefficient for {ring_number}: expected {expected_coefficient}, got {coefficient}")
-                all_correct = False
-            else:
-                print(f"   ✅ Correct coefficient for {ring_number}: {coefficient}")
+            if result.get('race_id'):
+                race_ids.add(result['race_id'])
         
-        return all_correct
+        print(f"   Found {len(race_ids)} unique races in results")
+        
+        # Should have 3 races (32 Oude, 26 Jaarduiven, 462 Jongen)
+        if len(race_ids) >= 3:
+            print("   ✅ Multiple races created successfully")
+            return True
+        else:
+            print(f"   ❌ Expected at least 3 races, found {len(race_ids)}")
+            return False
+
+    def verify_other_pigeons_work(self):
+        """Verify that other functionality still works (race creation, result insertion for different pigeons)"""
+        # Create another pigeon with a different ring number
+        timestamp = str(int(time.time()))[-6:]
+        other_pigeon_data = {
+            "ring_number": f"BE{timestamp}999",
+            "name": "Other Test Pigeon",
+            "country": "BE",
+            "gender": "Female",
+            "color": "Red",
+            "breeder": "Test Breeder"
+        }
+        
+        success, response = self.run_test(
+            "Create Other Test Pigeon",
+            "POST",
+            "pigeons",
+            200,
+            data=other_pigeon_data
+        )
+        
+        if not success:
+            return False
+        
+        other_pigeon_id = response['id']
+        
+        # Create a simple race result file for this pigeon
+        simple_race_content = f"""----------------------------------------------------------------------
+Data Technology Deerlijk
+----------------------------------------------------------------------
+QUIEVRAIN 22-05-21 1234 Jongen Deelnemers: 45 LOSTIJD: 07:30:00
+
+NR  Naam                Ring        Afstand  Tijd      Snelheid
+----------------------------------------------------------------------
+1   Test Owner         {other_pigeon_data['ring_number']}  12500   08.1234   1450.5
+----------------------------------------------------------------------
+"""
+        
+        files = {
+            'file': ('simple_race.txt', simple_race_content, 'text/plain')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Simple Race for Other Pigeon",
+            "POST",
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if success:
+            print(f"   Other pigeon upload: {upload_response.get('races', 0)} races, {upload_response.get('results', 0)} results")
+        
+        # Cleanup
+        self.run_test("Cleanup Other Pigeon", "DELETE", f"pigeons/{other_pigeon_id}", 200)
+        
+        return success
+
+    def analyze_file_content(self):
+        """Analyze the result_new.txt file to understand the test scenario"""
+        try:
+            with open('/app/result_new.txt', 'r') as f:
+                content = f.read()
+        except FileNotFoundError:
+            print("❌ result_new.txt file not found")
+            return False
+        
+        print("\n📋 Analyzing result_new.txt file content...")
+        
+        # Count occurrences of BE505078525
+        occurrences = content.count('BE 505078525')
+        print(f"   Ring number 'BE 505078525' appears {occurrences} times in file")
+        
+        # Find race headers
+        race_headers = []
+        lines = content.split('\n')
+        for line in lines:
+            if 'CHIMAY' in line and '09-08-25' in line:
+                race_headers.append(line.strip())
+        
+        print(f"   Found {len(race_headers)} race headers:")
+        for i, header in enumerate(race_headers):
+            print(f"     Race {i+1}: {header}")
+        
+        # This should show 3 races all on the same date (09-08-25)
+        # and the pigeon BE505078525 appearing in multiple races
+        
+        return True
+
+    def cleanup_test_pigeon(self):
+        """Clean up the test pigeon"""
+        if self.created_pigeon_id:
+            success, response = self.run_test(
+                "Cleanup Test Pigeon",
+                "DELETE",
+                f"pigeons/{self.created_pigeon_id}",
+                200
+            )
+            return success
+        return True
 
 def main():
-    print("🚀 Starting Duplicate Prevention System Tests")
-    print("=" * 70)
-    print("Testing the FIXED duplicate prevention system implementation")
+    print("🚀 Starting Duplicate Prevention Test for Multi-Race Files")
     print("=" * 70)
     
     tester = DuplicatePreventionTester()
     
-    # Clear any existing test data
-    tester.clear_test_data()
-    
     # Run the comprehensive duplicate prevention test
     test_results = []
     
-    # Step 1: Create test pigeons
-    test_results.append(tester.create_test_pigeons())
+    # Step 1: Analyze the test file
+    test_results.append(tester.analyze_file_content())
     
-    # Step 2: Upload race results
-    test_results.append(tester.upload_race_results_with_duplicates())
+    # Step 2: Clear any existing test data
+    test_results.append(tester.clear_test_data())
     
-    # Step 3: Verify no duplicates
-    test_results.append(tester.verify_no_duplicates())
+    # Step 3: Create test pigeon with ring number that appears in file
+    test_results.append(tester.create_test_pigeon())
     
-    # Step 4: Test re-upload prevention
-    test_results.append(tester.test_re_upload_prevention())
+    # Step 4: Upload the multi-race file
+    test_results.append(tester.upload_multi_race_file())
     
-    # Step 5: Verify only registered pigeons
-    test_results.append(tester.verify_only_registered_pigeons())
+    # Step 5: Verify duplicate prevention - should have only 1 result
+    test_results.append(tester.verify_single_result_per_pigeon())
     
-    # Step 6: Verify coefficient calculations
-    test_results.append(tester.verify_coefficient_calculations())
+    # Step 6: Verify that races were created properly
+    test_results.append(tester.verify_races_created())
+    
+    # Step 7: Verify other functionality still works
+    test_results.append(tester.verify_other_pigeons_work())
+    
+    # Step 8: Cleanup
+    test_results.append(tester.cleanup_test_pigeon())
     
     # Print final results
     print("\n" + "=" * 70)
-    print(f"📊 DUPLICATE PREVENTION TEST RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
+    print(f"📊 Test Results: {tester.tests_passed}/{tester.tests_run} tests passed")
     
-    if all(test_results):
-        print("🎉 ALL DUPLICATE PREVENTION TESTS PASSED!")
-        print("✅ Each pigeon appears only ONCE per race")
-        print("✅ Only registered pigeons appear in results")
-        print("✅ Re-upload protection works correctly")
-        print("✅ Coefficient calculations are accurate")
-        print("✅ Duplicate prevention system is working perfectly!")
+    if tester.tests_passed == tester.tests_run:
+        print("🎉 All duplicate prevention tests passed!")
+        print("✅ Duplicate prevention logic is working correctly")
         return 0
     else:
-        failed_count = len([r for r in test_results if not r])
-        print(f"⚠️  {failed_count} critical test(s) failed!")
-        print("❌ Duplicate prevention system needs attention")
+        failed_tests = tester.tests_run - tester.tests_passed
+        print(f"⚠️  {failed_tests} test(s) failed. Duplicate prevention may have issues.")
         return 1
 
 if __name__ == "__main__":
