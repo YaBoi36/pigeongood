@@ -2194,16 +2194,25 @@ const HealthTraining = () => {
               ) : (
                 <div className="space-y-4">
                   {filteredLogs.map((log) => {
-                    const pigeon = pigeons.find(p => p.id === log.pigeon_id);
+                    const pigeon = log.isLoftLog ? null : pigeons.find(p => p.id === log.pigeon_id);
                     return (
-                      <div key={log.id} className="flex items-start justify-between p-4 border rounded-lg">
+                      <div key={`${log.isLoftLog ? 'loft' : 'individual'}-${log.id}`} className="flex items-start justify-between p-4 border rounded-lg">
                         <div className="flex items-start space-x-4">
                           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                             <Stethoscope className="w-5 h-5 text-red-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold">{log.title}</h3>
-                            <p className="text-sm text-gray-600">{pigeon?.name || 'Unknown'} - {pigeon?.ring_number}</p>
+                            <div className="flex items-center space-x-2">
+                              <h3 className="font-semibold">{log.title}</h3>
+                              <Badge variant={log.isLoftLog ? "default" : "outline"} className="text-xs">
+                                {log.isLoftLog ? 'Loft' : 'Individual'}
+                              </Badge>
+                            </div>
+                            {log.isLoftLog ? (
+                              <p className="text-sm text-gray-600">Loft: {log.loft_name}</p>
+                            ) : (
+                              <p className="text-sm text-gray-600">{pigeon?.name || 'Unknown'} - {pigeon?.ring_number}</p>
+                            )}
                             <p className="text-sm text-gray-500">{log.date}</p>
                             {log.description && (
                               <p className="text-sm text-gray-600 mt-1">{log.description}</p>
@@ -2216,7 +2225,7 @@ const HealthTraining = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteLog(log.id)}
+                          onClick={() => handleDeleteLog(log)}
                           className="text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="w-4 h-4" />
