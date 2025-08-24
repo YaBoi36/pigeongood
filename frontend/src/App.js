@@ -986,6 +986,16 @@ const MyPigeons = () => {
                   />
                 </div>
               </div>
+              
+              <div>
+                <Label htmlFor="loft">Loft (Optional)</Label>
+                <Input 
+                  id="loft"
+                  value={newPigeon.loft}
+                  onChange={(e) => setNewPigeon({...newPigeon, loft: e.target.value})}
+                  placeholder="Main Loft, Training Facility, etc."
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="sire_ring">Sire Ring</Label>
