@@ -27,7 +27,9 @@ import {
   Baby,
   Stethoscope,
   BookOpen,
-  TrendingUp
+  TrendingUp,
+  Clock,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
