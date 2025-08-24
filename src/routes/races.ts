@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import multer from 'multer';
+import multer, { MulterError } from 'multer';
 import database from '../utils/database';
 import { RaceFileParser } from '../utils/file-parser';
 import { RaceResultWithDetails } from '../types';
@@ -8,7 +8,7 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Get all race results with pigeon and race details
-router.get('/race-results', async (req: Request, res: Response) => {
+router.get('/race-results', async (req: Request, res: Response): Promise<void> => {
   try {
     const results = await database.raceResults.find({}).sort({ created_at: -1 }).toArray();
     const detailedResults: RaceResultWithDetails[] = [];
