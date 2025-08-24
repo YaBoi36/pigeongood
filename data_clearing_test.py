@@ -200,7 +200,7 @@ class DataClearingTester:
         endpoints_to_test = [
             ("/api/pigeons", "GET"),
             ("/api/race-results", "GET"),
-            ("/api/dashboard", "GET")
+            ("/api/dashboard-stats", "GET")
         ]
         
         all_responsive = True
