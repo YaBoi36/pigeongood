@@ -306,22 +306,72 @@ export class RaceFileParser {
   }
   
   private static parseResultLine(line: string, raceId: string): RaceResult | null {
-    // Parse a result line with format: NR Naam Ring Afstand Tijd Snelheid
-    const parts = line.trim().split(/\s+/);
-    
-    if (parts.length < 6) return null;
+    // Parse a complex result line
+    const trimmedLine = line.trim();
+    console.log('Parsing result line:', trimmedLine);
     
     try {
-      const position = parseInt(parts[0], 10);
-      const name = parts[1];
-      const ringNumber = this.normalizeRingNumber(parts[2]);
-      const distance = this.parseDistance(parts[3]);
-      const time = parts[4];
-      const speed = this.parseSpeed(parts[5]);
-      
-      if (isNaN(position) || isNaN(distance) || isNaN(speed)) {
+      // Extract position (first number)
+      const positionMatch = trimmedLine.match(/^\s*(\d+)/);
+      if (!positionMatch) {
         return null;
       }
+      const position = parseInt(positionMatch[1], 10);
+      
+      // Extract ring number (BE + digits, may have spaces)
+      const ringMatch = line.match(/BE\s+(\d{6,9})/);
+      if (!ringMatch) {
+        console.log('No ring number found in line');
+        return null;
+      }
+      const ringNumber = `BE${ringMatch[1]}`;  // Combine BE with digits (no spaces)
+      
+      // Extract speed (decimal number, usually near the end)
+      const speedMatches = line.match(/(\d+\.\d+)/g);
+      if (!speedMatches || speedMatches.length === 0) {
+        console.log('No speed found in line');
+        return null;
+      }
+      const speed = parseFloat(speedMatches[speedMatches.length - 1]);  // Take the last decimal number
+      
+      // Extract owner name (more complex parsing needed)
+      let name = 'Unknown';
+      const parts = trimmedLine.split(/\s+/);
+      if (parts.length >= 4) {
+        // Try to extract name from the middle parts
+        const nameStart = 2;  // Skip position and first identifier
+        const nameEnd = Math.max(nameStart + 1, parts.length - 8);  // Leave room for other data
+        name = parts.slice(nameStart, nameEnd).join(' ');
+        if (name.length > 30) {
+          name = name.substring(0, 30);  // Limit name length
+        }
+      }
+      
+      // Extract distance (try to find a reasonable distance value)
+      let distance = 85000;  // Default distance in meters
+      const distanceMatches = line.match(/\b(\d{4,6})\b/g);
+      if (distanceMatches) {
+        for (const match of distanceMatches) {
+          const d = parseInt(match, 10);
+          if (d >= 10000 && d <= 1000000) {  // Reasonable distance range
+            distance = d;
+            break;
+          }
+        }
+      }
+      
+      // Extract time (look for HH.MMSS pattern)
+      let time = '14:00:00';
+      const timeMatch = line.match(/(\d{2}\.\d{4,5})/);
+      if (timeMatch) {
+        const timeStr = timeMatch[1];
+        const [hours, minutesSeconds] = timeStr.split('.');
+        const minutes = minutesSeconds.substring(0, 2);
+        const seconds = minutesSeconds.substring(2);
+        time = `${hours}:${minutes}:${seconds}`;
+      }
+      
+      console.log(`Parsed: Position=${position}, Ring=${ringNumber}, Speed=${speed}, Name=${name}`);
       
       return {
         id: uuidv4(),
@@ -337,7 +387,7 @@ export class RaceFileParser {
         created_at: new Date()
       };
     } catch (error) {
-      console.error('Error parsing result line:', line, error);
+      console.error('Error parsing result line:', trimmedLine, error);
       return null;
     }
   }
