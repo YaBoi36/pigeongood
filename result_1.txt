@@ -1,0 +1,74 @@
+De Pijl Kermt Kermt                           Data Technology Deerlijk  (55083)
+-------------------------------------------------------------------------------------
+CHIMAY               09-08-25  32 Oude              Deelnemers:9 LOSTIJD:08.20
+-------------------------------------------------------------------------------------
+  NR Naam                  Gemeent AD IG Afstand LD Ring   JR Bestat     Snelh.    NR
+  N0 Nom                   Localit EN MQ Distanc PA Bague  AN Constat    Vitesse   NO
+-------------------------------------------------------------------------------------
+   1 VRANCKEN WILLY&DOCHTE KURINGE  3  1  123171 BE 504574322 09.42020 1501.4750    1
+   2 BRIERS VALENT.&ZN     KURINGE  4  3  122459 BE 504232523 09.42050 1491.8863    2
+   3 HERMANS RUBEN         KURINGE  4  2  124456 BE 504280523 09.44570 1465.0500    3
+   4 VRANCKEN WILLY&DOCHTE KURINGE  3  2       2 BE 508218818 09.44160 1461.6812    4
+   5 BRIERS VALENT.&ZN     KURINGE  4  1       2 BE 504449021 09.43470 1461.6153    5
+   6 VRANCKEN WILLY&DOCHTE KURINGE  3  3       3 BE 504175623 09.44370 1455.6352    6
+   7 RANSON STEVEN         KURINGE  4  1  120205 BE 504678922 09.42450 1452.6284    7
+   8 BRIERS VALENT.&ZN     KURINGE  4  4       3 BE 504707722 09.44310 1448.9331    8
+   9 LENAERTS ADOLF        KURINGE  8  2  123159 BE 504670422 09.45140 1444.9628    9
+  10 JORDENS GUIDO         KURINGE  1  1  123116 BE 504668722 09.45310 1439.6726   10
+  11 MEYNEN RUDI           KERMT    2  1  120001 BE 504321623 09.43338 1436.0485   11
+  12 RANSON STEVEN         KURINGE  4  4       2 BE 503133220 09.43540 1432.7175   12
+  13 RANSON STEVEN         KURINGE  4  2       3 BE 504241023 09.43560 1432.1485   13
+  14 HERMANS RUBEN         KURINGE  4  1       2 BE 504282723 09.47140 1426.7023   14
+  15 LENAERTS ADOLF        KURINGE  8  8       2 BE 507914219 09.46280 1424.3524   15
+  16 LENAERTS ADOLF        KURINGE  8  1       3 BE 504670322 09.46590 1415.8919   16
+-------------------------------------------------------------------------------------
+
+De Pijl Kermt Kermt                           Data Technology Deerlijk  (55083)
+-------------------------------------------------------------------------------------
+CHIMAY               09-08-25  26 Jaarduiven        Deelnemers:9 LOSTIJD:08.20
+-------------------------------------------------------------------------------------
+  NR Naam                  Gemeent AD IG Afstand LD Ring   JR Bestat     Snelh.    NR
+  N0 Nom                   Localit EN MQ Distanc PA Bague  AN Constat    Vitesse   NO
+-------------------------------------------------------------------------------------
+   1 BRIERS VALENT.&ZN     KURINGE  2  1  122459 BE 504813624 09.41170 1506.5696    1
+   2 HERMANS RUBEN         KURINGE 10  9  124456 BE 504965824 09.43410 1487.2257    2
+   3 HERMANS RUBEN         KURINGE 10  6       2 BE 504959824 09.43580 1482.2072    3
+   4 VRANCKEN WILLY&DOCHTE KURINGE  2  1  123171 BE 504727824 09.43240 1476.8705    4
+   5 HERMANS RUBEN         KURINGE 10  8       3 BE 504962224 09.45200 1458.4688    5
+   6 HERMANS RUBEN         KURINGE 10  3       4 BE 508503924 09.45440 1451.6641    6
+   7 HERMANS RUBEN         KURINGE 10  1       5 BE 504962424 09.46120 1443.8051    7
+   8 HERMANS RUBEN         KURINGE 10  2       6 BE 504963424 09.46320 1438.2435    8
+   9 HERMANS RUBEN         KURINGE 10 10       7 BE 504965424 09.46370 1436.8597    9
+  10 VANSPAUWEN-TIREZ      KERMT    2  1  119925 BE 504978224 09.46160 1390.1662   10
+  11 VANSPAUWEN-TIREZ      KERMT    2  2       2 BE 504828624 09.46390 1384.0162   11
+  12 HERMANS RUBEN         KURINGE 10  7       8 BE 504961224 09.50340 1374.1921   12
+  13 HERMANS RUBEN         KURINGE 10  5       9 BE 504963924 09.50590 1367.8989   13
+-------------------------------------------------------------------------------------
+
+De Pijl Kermt Kermt                           Data Technology Deerlijk  (55083)
+-------------------------------------------------------------------------------------
+CHIMAY               09-08-25  462 Jongen           Deelnemers:25 LOSTIJD:08.20
+-------------------------------------------------------------------------------------
+  NR Naam                  Gemeent AD IG Afstand LD Ring   JR Bestat     Snelh.    NR
+  N0 Nom                   Localit EN MQ Distanc PA Bague  AN Constat    Vitesse   NO
+-------------------------------------------------------------------------------------
+   1 VANGEEL JO            KURINGE 36 12  123355 BE 505078525 09.42260 1496.4214    1
+   2 VANGEEL JO            KURINGE 36 29       2 BE 505082325 09.42290 1495.5142    2
+   3 VRANCKEN WILLY&DOCHTE KURINGE 14  1  123171 BE 505063925 09.42560 1485.1809    3
+   4 VRANCKEN WILLY&DOCHTE KURINGE 14  7       2 BE 505068925 09.42580 1484.5842    4
+   5 VANGEEL JO            KURINGE 36  5       3 BE 505081925 09.43080 1483.8212    5
+-------------------------------------------------------------------------------------
+
+De Pijl Kermt Kermt                           Data Technology Deerlijk  (55083)
+-------------------------------------------------------------------------------------
+CHIMAY               09-08-25  58 Oude+jaarse       Deelnemers:12 LOSTIJD:08.20
+-------------------------------------------------------------------------------------
+  NR Naam                  Gemeent AD IG Afstand LD Ring   JR Bestat     Snelh.    NR
+  N0 Nom                   Localit EN MQ Distanc PA Bague  AN Constat    Vitesse   NO
+-------------------------------------------------------------------------------------
+   1 BRIERS VALENT.&ZN     KURINGE  6  4  122459 BE 504813624 09.41170 1506.5696    1
+   2 VRANCKEN WILLY&DOCHTE KURINGE  5  1  123171 BE 504574322 09.42020 1501.4750    2
+   3 BRIERS VALENT.&ZN     KURINGE  6  3       2 BE 504232523 09.42050 1491.8863    3
+   4 HERMANS RUBEN         KURINGE 14 13  124456 BE 504965824 09.43410 1487.2257    4
+   5 HERMANS RUBEN         KURINGE 14 10       2 BE 504959824 09.43580 1482.2072    5
+-------------------------------------------------------------------------------------
