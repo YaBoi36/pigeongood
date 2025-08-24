@@ -338,14 +338,12 @@ app.get('/api/race-results', async (req, res) => {
       const pigeon = await db.collection('pigeons').findOne({ ring_number: result.ring_number });
       const race = await db.collection('races').findOne({ id: result.race_id });
       
-      // Only include results that have matching pigeons
-      if (pigeon) {
-        detailedResults.push({
-          ...parseFromMongo(result),
-          pigeon: parseFromMongo(pigeon),
-          race: race ? parseFromMongo(race) : undefined
-        });
-      }
+      // Include ALL results, but mark which ones have matching pigeons
+      detailedResults.push({
+        ...parseFromMongo(result),
+        pigeon: pigeon ? parseFromMongo(pigeon) : null,
+        race: race ? parseFromMongo(race) : null
+      });
     }
     
     res.json(detailedResults);
