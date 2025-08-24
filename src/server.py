@@ -520,21 +520,15 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
                     logger.warning(f"Skipping duplicate result for ring {ring_number} in race {race_obj.id}")
                     continue
                 
-                # DUPLICATE PREVENTION FIX: Check if this pigeon already has a result on this DATE
-                # (regardless of race category) to prevent multiple results per day
-                existing_results_for_pigeon = await db.race_results.find({
+                # DUPLICATE PREVENTION: Check if this pigeon already has a result in this SPECIFIC RACE
+                # (allows same pigeon in different races/categories on same date)
+                existing_result_in_race = await db.race_results.find_one({
+                    "race_id": race_obj.id,
                     "ring_number": ring_number
-                }).to_list(1000)
+                })
                 
-                has_result_for_date = False
-                for existing_result in existing_results_for_pigeon:
-                    existing_race = await db.races.find_one({"id": existing_result["race_id"]})
-                    if existing_race and existing_race["date"] == race_obj.date:
-                        has_result_for_date = True
-                        logger.warning(f"Skipping duplicate result for ring {ring_number} on date {race_obj.date} - pigeon already has result for this date")
-                        break
-                
-                if has_result_for_date:
+                if existing_result_in_race:
+                    logger.warning(f"Skipping duplicate result for ring {ring_number} in race {race_obj.race_name} {race_obj.category} - pigeon already has result in this specific race")
                     continue
                 
                 # Recalculate coefficient with correct formula using the confirmed total (not parsed total)
