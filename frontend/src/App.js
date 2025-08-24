@@ -1632,11 +1632,19 @@ const BreedingPairing = () => {
 const HealthTraining = () => {
   const [pigeons, setPigeons] = useState([]);
   const [healthLogs, setHealthLogs] = useState([]);
+  const [filteredLogs, setFilteredLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('health');
   const [addLogOpen, setAddLogOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    search: "",
+    pigeon: "",
+    type: "",
+    dateFrom: "",
+    dateTo: ""
+  });
   const [newLog, setNewLog] = useState({
     pigeon_id: "",
-    type: "health", // health, training, diet
+    type: "health",
     title: "",
     description: "",
     date: new Date().toISOString().split('T')[0],
@@ -1649,6 +1657,47 @@ const HealthTraining = () => {
     fetchHealthLogs();
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [healthLogs, filters, activeTab]);
+
+  const applyFilters = () => {
+    let filtered = healthLogs.filter(log => log.type === activeTab);
+
+    // Search filter
+    if (filters.search) {
+      filtered = filtered.filter(log => 
+        log.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+        (log.description && log.description.toLowerCase().includes(filters.search.toLowerCase()))
+      );
+    }
+
+    // Pigeon filter
+    if (filters.pigeon) {
+      filtered = filtered.filter(log => log.pigeon_id === filters.pigeon);
+    }
+
+    // Date filters
+    if (filters.dateFrom) {
+      filtered = filtered.filter(log => log.date >= filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      filtered = filtered.filter(log => log.date <= filters.dateTo);
+    }
+
+    setFilteredLogs(filtered);
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      search: "",
+      pigeon: "",
+      type: "",
+      dateFrom: "",
+      dateTo: ""
+    });
+  };
+
   const fetchPigeons = async () => {
     try {
       const response = await axios.get(`${API}/pigeons`);
@@ -1660,8 +1709,8 @@ const HealthTraining = () => {
 
   const fetchHealthLogs = async () => {
     try {
-      // We'll implement this endpoint later
-      setHealthLogs([]); // For now, empty array
+      const response = await axios.get(`${API}/health-logs`);
+      setHealthLogs(response.data);
     } catch (error) {
       console.error('Error fetching health logs:', error);
     }
@@ -1678,7 +1727,7 @@ const HealthTraining = () => {
     }
 
     try {
-      // We'll implement this endpoint later
+      await axios.post(`${API}/health-logs`, newLog);
       toast({
         title: "Success!",
         description: "Log entry added successfully",
@@ -1697,7 +1746,26 @@ const HealthTraining = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add log entry",
+        description: error.response?.data?.detail || "Failed to add log entry",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteLog = async (logId) => {
+    if (!window.confirm("Are you sure you want to delete this log entry?")) return;
+
+    try {
+      await axios.delete(`${API}/health-logs/${logId}`);
+      toast({
+        title: "Success!",
+        description: "Log entry deleted successfully",
+      });
+      fetchHealthLogs();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete log entry",
         variant: "destructive",
       });
     }
