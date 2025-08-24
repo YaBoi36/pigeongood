@@ -210,7 +210,7 @@ backend:
   - task: "Fix duplicate prevention logic for multi-race files"
     implemented: true
     working: true
-    file: "/app/src/server.py"
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
@@ -224,6 +224,9 @@ backend:
       - working: true
         agent: "main"
         comment: "VERIFIED: Duplicate prevention logic is working correctly. Direct database test confirms that when attempting to create multiple results for the same pigeon on the same date, only the first result is created and subsequent attempts are properly blocked. The core duplicate prevention mechanism at lines 520-533 in server.py correctly identifies existing results by date comparison and prevents duplicates."
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE DUPLICATE PREVENTION TESTING COMPLETED: ✅ All 101 backend API tests passed including dedicated duplicate prevention test ✅ CORE LOGIC VERIFIED: Lines 518-533 in server.py correctly prevent multiple results for same pigeon on same date ✅ MULTI-RACE FILE HANDLING: System correctly processes result_new.txt with 4 CHIMAY races from same date (09-08-25) without creating duplicates ✅ DATE-BASED PREVENTION: Each pigeon limited to one result per date regardless of race category ✅ DUPLICATE FILE UPLOAD PREVENTION: Re-uploading same file doesn't create additional results ✅ RACE CREATION LOGIC: Multiple races allowed for same date with different categories (expected behavior) ✅ LOGGING VERIFICATION: System properly logs 'Skipping duplicate result for ring [ring_number] on date [date]' when preventing duplicates. Duplicate prevention fix is working correctly as specified in the review request."
 
 frontend:
   - task: "Verify pigeon deletion and race result display"
