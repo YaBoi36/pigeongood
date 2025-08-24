@@ -209,11 +209,11 @@ backend:
 
   - task: "Fix duplicate prevention logic for multi-race files"
     implemented: true
-    working: false
-    file: "/app/src/routes/races.ts"
+    working: true
+    file: "/app/src/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
@@ -221,6 +221,9 @@ backend:
       - working: false
         agent: "main"
         comment: "FIXED: Updated duplicate prevention logic to check for same pigeon on same date across all races, not just same race_id. Added batch processing tracking with processedPigeonsToday Set to prevent duplicates within current file processing. Now checks both existing database results and current batch processing to ensure only one result per pigeon per date."
+      - working: true
+        agent: "main"
+        comment: "VERIFIED: Duplicate prevention logic is working correctly. Direct database test confirms that when attempting to create multiple results for the same pigeon on the same date, only the first result is created and subsequent attempts are properly blocked. The core duplicate prevention mechanism at lines 520-533 in server.py correctly identifies existing results by date comparison and prevents duplicates."
 
 frontend:
   - task: "Verify pigeon deletion and race result display"
