@@ -686,9 +686,12 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         """Test complete health log functionality"""
         print("\n🔍 Testing Health Log Functionality...")
         
-        # Step 1: Create a pigeon for health logs
+        # Step 1: Create a pigeon for health logs with unique ring number
+        import time
+        timestamp = str(int(time.time()))[-6:]
+        
         pigeon_data = {
-            "ring_number": "BE111222333",
+            "ring_number": f"BE{timestamp}888",
             "name": "Health Test Pigeon",
             "country": "BE",
             "gender": "Male",
