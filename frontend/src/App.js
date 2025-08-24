@@ -1632,12 +1632,15 @@ const BreedingPairing = () => {
 const HealthTraining = () => {
   const [pigeons, setPigeons] = useState([]);
   const [healthLogs, setHealthLogs] = useState([]);
+  const [loftLogs, setLoftLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('health');
   const [addLogOpen, setAddLogOpen] = useState(false);
+  const [logMode, setLogMode] = useState('individual'); // 'individual' or 'loft'
   const [filters, setFilters] = useState({
     search: "",
     pigeon: "",
+    loft: "",
     type: "",
     dateFrom: "",
     dateTo: ""
@@ -1650,48 +1653,74 @@ const HealthTraining = () => {
     date: new Date().toISOString().split('T')[0],
     reminder_date: ""
   });
+  const [newLoftLog, setNewLoftLog] = useState({
+    loft_name: "",
+    type: "health",
+    title: "",
+    description: "",
+    date: new Date().toISOString().split('T')[0],
+    reminder_date: ""
+  });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPigeons();
     fetchHealthLogs();
+    fetchLoftLogs();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [healthLogs, filters, activeTab]);
+  }, [healthLogs, loftLogs, filters, activeTab]);
 
   const applyFilters = () => {
-    let filtered = healthLogs.filter(log => log.type === activeTab);
+    // Combine individual and loft logs
+    let allLogs = [
+      ...healthLogs.filter(log => log.type === activeTab),
+      ...loftLogs.filter(log => log.type === activeTab).map(log => ({...log, isLoftLog: true}))
+    ];
 
     // Search filter
     if (filters.search) {
-      filtered = filtered.filter(log => 
+      allLogs = allLogs.filter(log => 
         log.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         (log.description && log.description.toLowerCase().includes(filters.search.toLowerCase()))
       );
     }
 
-    // Pigeon filter
+    // Pigeon filter (only for individual logs)
     if (filters.pigeon) {
-      filtered = filtered.filter(log => log.pigeon_id === filters.pigeon);
+      allLogs = allLogs.filter(log => 
+        log.isLoftLog || log.pigeon_id === filters.pigeon
+      );
+    }
+
+    // Loft filter (only for loft logs)
+    if (filters.loft) {
+      allLogs = allLogs.filter(log => 
+        !log.isLoftLog || log.loft_name.toLowerCase().includes(filters.loft.toLowerCase())
+      );
     }
 
     // Date filters
     if (filters.dateFrom) {
-      filtered = filtered.filter(log => log.date >= filters.dateFrom);
+      allLogs = allLogs.filter(log => log.date >= filters.dateFrom);
     }
     if (filters.dateTo) {
-      filtered = filtered.filter(log => log.date <= filters.dateTo);
+      allLogs = allLogs.filter(log => log.date <= filters.dateTo);
     }
 
-    setFilteredLogs(filtered);
+    // Sort by date
+    allLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    setFilteredLogs(allLogs);
   };
 
   const resetFilters = () => {
     setFilters({
       search: "",
       pigeon: "",
+      loft: "",
       type: "",
       dateFrom: "",
       dateTo: ""
@@ -1716,52 +1745,102 @@ const HealthTraining = () => {
     }
   };
 
-  const handleAddLog = async () => {
-    if (!newLog.pigeon_id || !newLog.title) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a pigeon and enter a title",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const fetchLoftLogs = async () => {
     try {
-      await axios.post(`${API}/health-logs`, newLog);
-      toast({
-        title: "Success!",
-        description: "Log entry added successfully",
-      });
-      
-      setNewLog({
-        pigeon_id: "",
-        type: "health",
-        title: "",
-        description: "",
-        date: new Date().toISOString().split('T')[0],
-        reminder_date: ""
-      });
-      setAddLogOpen(false);
-      fetchHealthLogs();
+      const response = await axios.get(`${API}/loft-logs`);
+      setLoftLogs(response.data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.detail || "Failed to add log entry",
-        variant: "destructive",
-      });
+      console.error('Error fetching loft logs:', error);
     }
   };
 
-  const handleDeleteLog = async (logId) => {
-    if (!window.confirm("Are you sure you want to delete this log entry?")) return;
+  const handleAddLog = async () => {
+    if (logMode === 'individual') {
+      if (!newLog.pigeon_id || !newLog.title) {
+        toast({
+          title: "Missing Information",
+          description: "Please select a pigeon and enter a title",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        await axios.post(`${API}/health-logs`, newLog);
+        toast({
+          title: "Success!",
+          description: "Individual log entry added successfully",
+        });
+        
+        setNewLog({
+          pigeon_id: "",
+          type: "health",
+          title: "",
+          description: "",
+          date: new Date().toISOString().split('T')[0],
+          reminder_date: ""
+        });
+        setAddLogOpen(false);
+        fetchHealthLogs();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error.response?.data?.detail || "Failed to add log entry",
+          variant: "destructive",
+        });
+      }
+    } else {
+      if (!newLoftLog.loft_name || !newLoftLog.title) {
+        toast({
+          title: "Missing Information",
+          description: "Please enter a loft name and title",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        await axios.post(`${API}/loft-logs`, newLoftLog);
+        toast({
+          title: "Success!",
+          description: "Loft log entry added successfully",
+        });
+        
+        setNewLoftLog({
+          loft_name: "",
+          type: "health",
+          title: "",
+          description: "",
+          date: new Date().toISOString().split('T')[0],
+          reminder_date: ""
+        });
+        setAddLogOpen(false);
+        fetchLoftLogs();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error.response?.data?.detail || "Failed to add loft log entry",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleDeleteLog = async (log) => {
+    if (!window.confirm(`Are you sure you want to delete this ${log.isLoftLog ? 'loft' : 'individual'} log entry?`)) return;
 
     try {
-      await axios.delete(`${API}/health-logs/${logId}`);
+      const endpoint = log.isLoftLog ? 'loft-logs' : 'health-logs';
+      await axios.delete(`${API}/${endpoint}/${log.id}`);
       toast({
         title: "Success!",
         description: "Log entry deleted successfully",
       });
-      fetchHealthLogs();
+      if (log.isLoftLog) {
+        fetchLoftLogs();
+      } else {
+        fetchHealthLogs();
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -1770,6 +1849,9 @@ const HealthTraining = () => {
       });
     }
   };
+
+  // Get unique loft names from pigeons
+  const loftNames = [...new Set(pigeons.map(p => p.breeder).filter(Boolean))];
 
   return (
     <div className="space-y-8">
