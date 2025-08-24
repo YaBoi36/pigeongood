@@ -760,8 +760,11 @@ async def create_pairing_result(pairing_id: str, result: PairingResultCreate):
     if not pairing:
         raise HTTPException(status_code=404, detail="Pairing not found")
     
+    # Create full ring number with country code
+    full_ring_number = f"{result.country}{result.ring_number}"
+    
     # Check if ring number already exists
-    existing = await db.pigeons.find_one({"ring_number": result.ring_number})
+    existing = await db.pigeons.find_one({"ring_number": full_ring_number})
     if existing:
         raise HTTPException(status_code=400, detail="Pigeon with this ring number already exists")
     
@@ -771,7 +774,7 @@ async def create_pairing_result(pairing_id: str, result: PairingResultCreate):
     
     # Create new pigeon with parent information
     new_pigeon = Pigeon(
-        ring_number=result.ring_number,
+        ring_number=full_ring_number,  # Use full ring number
         name=result.name or f"Child of {sire['name'] if sire.get('name') else sire['ring_number']} x {dam['name'] if dam.get('name') else dam['ring_number']}",
         country=result.country,
         gender=result.gender or "Unknown",
@@ -787,6 +790,7 @@ async def create_pairing_result(pairing_id: str, result: PairingResultCreate):
     # Store pairing result
     result_dict = result.dict()
     result_dict['pairing_id'] = pairing_id
+    result_dict['ring_number'] = full_ring_number  # Store full ring number
     result_obj = PairingResult(**result_dict)
     result_data = prepare_for_mongo(result_obj.dict())
     await db.pairing_results.insert_one(result_data)
