@@ -855,6 +855,7 @@ const MyPigeons = () => {
         gender: "",
         color: "",
         breeder: "",
+        loft: "",  // Reset loft field
         sire_ring: "",
         dam_ring: ""
       });
