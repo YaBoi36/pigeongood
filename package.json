@@ -10,28 +10,34 @@
     "test": "jest"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
     "mongodb": "^6.3.0",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "uuid": "^9.0.1",
-    "dotenv": "^16.3.1"
+    "ts-node": "^10.9.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.8",
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.11",
-    "@types/uuid": "^9.0.7",
     "@types/node": "^20.10.5",
-    "typescript": "^5.3.3",
-    "ts-node-dev": "^2.0.0",
+    "@types/uuid": "^9.0.7",
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.8"
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
   },
-  "keywords": ["pigeon", "racing", "management", "breeding"],
+  "keywords": [
+    "pigeon",
+    "racing",
+    "management",
+    "breeding"
+  ],
   "author": "Pigeon Racing System",
   "license": "MIT"
 }
