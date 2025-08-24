@@ -4,7 +4,7 @@ import json
 
 def debug_race_results():
     """Debug the race results to understand the data format"""
-    api_url = "https://pigeon-results-1.preview.emergentagent.com/api"
+    api_url = "https://race-loft.preview.emergentagent.com/api"
     
     print("🔍 Debugging Race Results Data")
     print("=" * 50)
@@ -36,7 +36,7 @@ def debug_race_results():
 
 def test_with_correct_format():
     """Test with the exact ring number format"""
-    api_url = "https://pigeon-results-1.preview.emergentagent.com/api"
+    api_url = "https://race-loft.preview.emergentagent.com/api"
     
     print("\n🔍 Testing with Correct Ring Number Format")
     print("=" * 50)
