@@ -347,10 +347,77 @@ const Dashboard = () => {
 // Race Results Component 
 const RaceResults = () => {
   const [raceResults, setRaceResults] = useState([]);
+  const [filteredResults, setFilteredResults] = useState([]);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({});
+  const [filters, setFilters] = useState({
+    search: "",
+    race: "",
+    minPlace: "",
+    maxPlace: "",
+    dateFrom: "",
+    dateTo: ""
+  });
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchRaceResults();
+    fetchDashboardStats();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [raceResults, filters]);
+
+  const applyFilters = () => {
+    let filtered = [...raceResults];
+
+    // Text search (name, ring number, race)
+    if (filters.search) {
+      filtered = filtered.filter(result => 
+        (result.pigeon?.name?.toLowerCase().includes(filters.search.toLowerCase())) ||
+        (result.ring_number?.toLowerCase().includes(filters.search.toLowerCase())) ||
+        (result.race?.race_name?.toLowerCase().includes(filters.search.toLowerCase()))
+      );
+    }
+
+    // Race filter
+    if (filters.race) {
+      filtered = filtered.filter(result => 
+        result.race?.race_name?.toLowerCase().includes(filters.race.toLowerCase())
+      );
+    }
+
+    // Place range filter
+    if (filters.minPlace) {
+      filtered = filtered.filter(result => result.position >= parseInt(filters.minPlace));
+    }
+    if (filters.maxPlace) {
+      filtered = filtered.filter(result => result.position <= parseInt(filters.maxPlace));
+    }
+
+    // Date filters
+    if (filters.dateFrom) {
+      filtered = filtered.filter(result => result.race?.date >= filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      filtered = filtered.filter(result => result.race?.date <= filters.dateTo);
+    }
+
+    setFilteredResults(filtered);
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      search: "",
+      race: "",
+      minPlace: "",
+      maxPlace: "",
+      dateFrom: "",
+      dateTo: ""
+    });
+  };
 
   useEffect(() => {
     fetchRaceResults();
