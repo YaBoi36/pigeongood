@@ -2017,7 +2017,7 @@ const HealthTraining = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
               <Label htmlFor="search">Search</Label>
               <div className="relative">
@@ -2033,16 +2033,33 @@ const HealthTraining = () => {
             </div>
             
             <div>
-              <Label htmlFor="pigeon_filter">Pigeon</Label>
+              <Label htmlFor="pigeon_filter">Individual Pigeon</Label>
               <Select onValueChange={(value) => setFilters({...filters, pigeon: value === "all" ? "" : value})}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Pigeons" />
+                  <SelectValue placeholder="All Individual" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Pigeons</SelectItem>
+                  <SelectItem value="all">All Individual</SelectItem>
                   {pigeons.map((pigeon) => (
                     <SelectItem key={pigeon.id} value={pigeon.id}>
                       {pigeon.name || 'Unnamed'} - {pigeon.ring_number}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="loft_filter">Loft/Breeder</Label>
+              <Select onValueChange={(value) => setFilters({...filters, loft: value === "all" ? "" : value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Lofts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Lofts</SelectItem>
+                  {loftNames.map((loft) => (
+                    <SelectItem key={loft} value={loft}>
+                      {loft}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -2077,7 +2094,7 @@ const HealthTraining = () => {
             </div>
           </div>
           <div className="text-sm text-gray-500 mt-2">
-            Showing {filteredLogs.length} of {healthLogs.filter(log => log.type === activeTab).length} entries
+            Showing {filteredLogs.length} entries (Individual: {filteredLogs.filter(l => !l.isLoftLog).length}, Loft: {filteredLogs.filter(l => l.isLoftLog).length})
           </div>
         </CardContent>
       </Card>
