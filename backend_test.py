@@ -1876,6 +1876,10 @@ def main():
     test_results.append(tester.test_cascade_deletion())
     test_results.append(tester.test_ring_number_matching())
     
+    # RESULT_1.TXT PIPELINE TEST - Focus of this review
+    print("\n" + "🎯" * 20 + " RESULT_1.TXT PIPELINE TEST " + "🎯" * 20)
+    test_results.append(tester.test_result_1_file_upload_pipeline())
+    
     # DUPLICATE PREVENTION TEST - Focus of this review
     print("\n" + "🚫" * 20 + " DUPLICATE PREVENTION TEST " + "🚫" * 20)
     test_results.append(tester.test_duplicate_prevention_multi_race_file())
