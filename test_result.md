@@ -268,6 +268,18 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Test user's specific result (1).txt file with pre-registered pigeons"
+    implemented: false
+    working: "NA"
+    file: "/app/user_result.txt"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "User continues to report 'no race results appearing' after uploading their specific result (1).txt file. Need to test with pre-registered pigeons to verify system works for user's data. File contains 4 races on 09-08-25: CHIMAY Oude (32 pigeons), CHIMAY Jaarduiven (26 pigeons), CHIMAY Jongen (462 pigeons), CHIMAY Oude+jaarse (58 pigeons). Will register key ring numbers like BE504574322, BE504813624, BE505078525 first, then upload file to demonstrate results appear."
+
 agent_communication:
   - agent: "main"
     message: "Identified ring number matching issue - registered pigeon BE501123125 doesn't match TXT file entries like BE 501516325. Need to fix parsing logic and add cascade deletion."
@@ -287,3 +299,5 @@ agent_communication:
     message: "DUPLICATE PREVENTION TESTING CONFIRMED: Comprehensive testing of the duplicate prevention fix completed successfully. ✅ CORE FUNCTIONALITY VERIFIED: All 101 backend API tests passed including dedicated duplicate prevention test with result_new.txt file ✅ DATE-BASED PREVENTION WORKING: Lines 518-533 in server.py correctly prevent multiple results for same pigeon on same date across different race categories ✅ MULTI-RACE FILE HANDLING: System properly processes result_new.txt containing 4 CHIMAY races from same date (09-08-25) without creating duplicates ✅ DUPLICATE FILE UPLOAD PREVENTION: Re-uploading same file doesn't create additional results ✅ RACE CREATION LOGIC: Multiple races allowed for same date with different categories (expected behavior) ✅ LOGGING VERIFICATION: System logs 'Skipping duplicate result for ring [ring_number] on date [date]' when preventing duplicates. The duplicate prevention fix is working correctly as specified in the review request. Backend is ready for production use."
   - agent: "testing"
     message: "RESULT_1.TXT PIPELINE ISSUES RESOLVED: ✅ CRITICAL FIX IMPLEMENTED: Fixed column header detection logic that was incorrectly skipping result lines containing keywords like 'NAAM', 'RING'. Modified line 264 in server.py to exclude lines starting with numbers from header detection. ✅ ALL PIPELINE ISSUES FIXED: Now processes all 4 races from result_1.txt (was only 2), creates results for all registered pigeons (was 0), maintains proper duplicate prevention. ✅ COMPREHENSIVE TESTING: Created dedicated test suites (result_1_pipeline_test.py, test_duplicate_prevention.py) that validate complete upload->parsing->result creation->duplicate prevention pipeline. ✅ VERIFIED WITH SPECIFIC RING NUMBERS: All target ring numbers (BE504574322, BE504813624, BE505078525) from review request now properly match and create exactly 1 result each. Backend pipeline is now fully functional and ready for production use."
+  - agent: "main"
+    message: "USER SPECIFIC FILE TEST: User provided their exact problematic file 'result (1).txt' and reports 'no race results appear after upload'. File contains 4 CHIMAY races from 09-08-25 with many ring numbers. Will test by first registering key pigeons (BE504574322, BE504813624, BE505078525) then uploading their exact file to demonstrate system works correctly when pigeons are registered first. This will confirm whether issue is user workflow (not registering pigeons first) or system bug."
