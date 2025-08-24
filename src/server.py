@@ -221,10 +221,14 @@ def parse_race_file(content: str) -> Dict[str, Any]:
                     total_pigeons = int(part)
                 
                 # Category
-                if 'Jongen' in part:
+                if 'jongen' in part.lower():
                     category = "Jongen"
-                elif 'oude' in part and 'jaar' in part:
+                elif 'oude' in part.lower() and 'jaar' in part.lower():
                     category = "oude & jaar"
+                elif 'oude' in part.lower():
+                    category = "Oude"
+                elif 'jaar' in part.lower():
+                    category = "Jaarduiven"
                 
                 # Participants
                 if 'Deelnemers:' in part:
