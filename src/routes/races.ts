@@ -80,9 +80,6 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
     }
     
     // Insert results (only for registered pigeons and prevent duplicates)
-    const processedPigeonsToday = new Set<string>(); // Track pigeons we've already processed for today
-    const raceDate = races.length > 0 ? races[0].date : null; // All races in file should be same date
-    
     for (const result of results) {
       try {
         // Only process results for registered pigeons
@@ -96,35 +93,17 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
           result.pigeon_id = pigeon.id;
         }
         
-        // Check for duplicates within current processing batch
-        if (processedPigeonsToday.has(result.ring_number)) {
-          console.log(`Duplicate result in current batch for ${result.ring_number} - skipping additional results`);
+        // DUPLICATE PREVENTION: Check if this pigeon already has a result in this SPECIFIC RACE
+        // (allows same pigeon in different races/categories on same date)
+        const existingResultInRace = await database.raceResults.findOne({
+          race_id: result.race_id,
+          ring_number: result.ring_number
+        });
+        
+        if (existingResultInRace) {
+          console.log(`Skipping duplicate result for ring ${result.ring_number} in race ${result.race_id} - pigeon already has result in this specific race`);
           continue;
         }
-        
-        // Check for duplicates against existing database results (same pigeon, same date)
-        if (raceDate) {
-          const existingResultsForPigeon = await database.raceResults.find({
-            ring_number: result.ring_number
-          }).toArray();
-          
-          let hasResultForDate = false;
-          for (const existingResult of existingResultsForPigeon) {
-            const existingRace = await database.races.findOne({ id: existingResult.race_id });
-            if (existingRace && existingRace.date === raceDate) {
-              hasResultForDate = true;
-              break;
-            }
-          }
-          
-          if (hasResultForDate) {
-            console.log(`Duplicate result found for ${result.ring_number} on date ${raceDate} - skipping`);
-            continue;
-          }
-        }
-        
-        // Mark this pigeon as processed for today
-        processedPigeonsToday.add(result.ring_number);
         
         const resultForMongo = database.prepareForMongo(result);
         await database.raceResults.insertOne(resultForMongo);
