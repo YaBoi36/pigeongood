@@ -227,6 +227,21 @@ backend:
       - working: true
         agent: "testing"
         comment: "COMPREHENSIVE DUPLICATE PREVENTION TESTING COMPLETED: ✅ All 101 backend API tests passed including dedicated duplicate prevention test ✅ CORE LOGIC VERIFIED: Lines 518-533 in server.py correctly prevent multiple results for same pigeon on same date ✅ MULTI-RACE FILE HANDLING: System correctly processes result_new.txt with 4 CHIMAY races from same date (09-08-25) without creating duplicates ✅ DATE-BASED PREVENTION: Each pigeon limited to one result per date regardless of race category ✅ DUPLICATE FILE UPLOAD PREVENTION: Re-uploading same file doesn't create additional results ✅ RACE CREATION LOGIC: Multiple races allowed for same date with different categories (expected behavior) ✅ LOGGING VERIFICATION: System properly logs 'Skipping duplicate result for ring [ring_number] on date [date]' when preventing duplicates. Duplicate prevention fix is working correctly as specified in the review request."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL BUG DISCOVERED: Previous testing was incorrect - duplicate prevention logic is FLAWED. Lines 456-458 in app.js check 'existingRace.race_name === currentRace.race_name && existingRace.date === currentRace.date' which allows multiple results for same pigeon on same date when race names differ (e.g., 'CHIMAY Oude' vs 'CHIMAY Jaarduiven'). This explains user's workflow issue: multi-race files create multiple results per pigeon, then deletion + re-upload creates inconsistent state. The logic should check ONLY date, not race_name + date combination. Comprehensive testing with deletion_duplicate_investigation_test.py and duplicate_prevention_detailed_test.py confirms this critical flaw."
+
+  - task: "Fix critical duplicate prevention bug in Node.js backend"
+    implemented: false
+    working: false
+    file: "/app/backend/app.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL BUG IDENTIFIED: Duplicate prevention logic in lines 456-458 of app.js is fundamentally flawed. Current logic checks 'existingRace.race_name === currentRace.race_name && existingRace.date === currentRace.date' which allows multiple results for same pigeon on same date when race categories differ. This causes user's workflow issue where deletion + re-upload doesn't work correctly. Fix needed: Change logic to check ONLY date (existingRace.date === currentRace.date) without race_name comparison to ensure one result per pigeon per date regardless of race category."
 
   - task: "Fix race results file upload and parsing pipeline for result_1.txt"
     implemented: true
