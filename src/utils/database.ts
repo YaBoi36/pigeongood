@@ -11,7 +11,7 @@ import {
 
 class Database {
   private client: MongoClient;
-  private db: Db;
+  private db!: Db; // Use definite assignment assertion
 
   constructor() {
     const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/pigeon_racing';
