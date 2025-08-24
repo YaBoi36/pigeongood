@@ -59,7 +59,7 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
     }
     
     const fileContent = req.file.buffer.toString('utf-8');
-    const { races, results } = RaceFileParser.parseRaceFile(fileContent);
+    const { races, results } = parseRaceFile(fileContent);
     
     // Get all registered pigeons
     const registeredPigeons = await database.pigeons.find({}).toArray();
