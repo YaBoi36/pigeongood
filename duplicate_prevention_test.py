@@ -32,7 +32,7 @@ class DuplicatePreventionTester:
                 response = requests.get(url, headers=headers)
             elif method == 'POST':
                 if files:
-                    response = requests.post(url, files=files, data=data)
+                    response = requests.post(url, files=files)
                 else:
                     response = requests.post(url, json=data, headers=headers)
             elif method == 'PUT':
@@ -50,8 +50,6 @@ class DuplicatePreventionTester:
                         print(f"   Response: {response_data}")
                     elif isinstance(response_data, list):
                         print(f"   Response: List with {len(response_data)} items")
-                        if len(response_data) > 0:
-                            print(f"   First item: {response_data[0]}")
                 except:
                     print(f"   Response: {response.text[:200]}...")
             else:
