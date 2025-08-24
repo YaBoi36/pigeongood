@@ -48,6 +48,7 @@ class PigeonCreate(BaseModel):
     gender: str
     color: str
     breeder: str
+    loft: Optional[str] = None  # New loft field
     sire_ring: Optional[str] = None
     dam_ring: Optional[str] = None
 
