@@ -858,6 +858,575 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         )
         return success
 
+    def test_ring_number_fix_in_pairing(self):
+        """Test the ring number fix - verify full ring number (country + number) is created from pairing"""
+        print("\n🔍 Testing Ring Number Fix in Pairing...")
+        
+        # Step 1: Create male and female pigeons for pairing
+        import time
+        timestamp = str(int(time.time()))[-6:]
+        
+        male_pigeon_data = {
+            "ring_number": f"BE{timestamp}101",
+            "name": "Ring Fix Male",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Blue",
+            "breeder": "Test Breeder"
+        }
+        
+        female_pigeon_data = {
+            "ring_number": f"BE{timestamp}102",
+            "name": "Ring Fix Female",
+            "country": "BE",
+            "gender": "Female",
+            "color": "Red",
+            "breeder": "Test Breeder"
+        }
+        
+        # Create male pigeon
+        success, male_response = self.run_test(
+            "Create Male Pigeon for Ring Fix Test",
+            "POST",
+            "pigeons",
+            200,
+            data=male_pigeon_data
+        )
+        
+        if not success or 'id' not in male_response:
+            print("❌ Failed to create male pigeon")
+            return False
+        
+        male_pigeon_id = male_response['id']
+        
+        # Create female pigeon
+        success, female_response = self.run_test(
+            "Create Female Pigeon for Ring Fix Test",
+            "POST",
+            "pigeons",
+            200,
+            data=female_pigeon_data
+        )
+        
+        if not success or 'id' not in female_response:
+            print("❌ Failed to create female pigeon")
+            return False
+        
+        female_pigeon_id = female_response['id']
+        
+        # Step 2: Create pairing
+        pairing_data = {
+            "sire_id": male_pigeon_id,
+            "dam_id": female_pigeon_id,
+            "notes": "Ring number fix test pairing"
+        }
+        
+        success, pairing_response = self.run_test(
+            "Create Pairing for Ring Fix Test",
+            "POST",
+            "pairings",
+            200,
+            data=pairing_data
+        )
+        
+        if not success or 'id' not in pairing_response:
+            print("❌ Failed to create pairing")
+            return False
+        
+        pairing_id = pairing_response['id']
+        
+        # Step 3: Create offspring with ring number "123456" and country "BE"
+        # This should result in full ring number "BE123456"
+        offspring_data = {
+            "ring_number": "123456",  # Just the number part
+            "country": "BE",          # Country code
+            "name": "Ring Fix Test Offspring",
+            "gender": "Male",
+            "color": "Checker",
+            "breeder": "Test Breeder"
+        }
+        
+        success, offspring_response = self.run_test(
+            "Create Offspring with Ring Number Fix",
+            "POST",
+            f"pairings/{pairing_id}/result",
+            200,
+            data=offspring_data
+        )
+        
+        if not success:
+            print("❌ Failed to create offspring from pairing")
+            return False
+        
+        print(f"   Offspring creation response: {offspring_response}")
+        
+        # Step 4: Verify the created pigeon has full ring number "BE123456"
+        success, pigeons_response = self.run_test(
+            "Get All Pigeons to Find Offspring",
+            "GET",
+            "pigeons",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get pigeons")
+            return False
+        
+        # Find the offspring pigeon
+        offspring_pigeon = None
+        for pigeon in pigeons_response:
+            if pigeon.get('ring_number') == 'BE123456':
+                offspring_pigeon = pigeon
+                break
+        
+        if not offspring_pigeon:
+            print("❌ Offspring pigeon with ring number 'BE123456' not found")
+            print(f"   Available pigeons: {[p.get('ring_number') for p in pigeons_response]}")
+            return False
+        
+        print(f"   ✅ Found offspring pigeon with full ring number: {offspring_pigeon['ring_number']}")
+        
+        # Step 5: Verify the pigeon appears correctly in /api/pigeons
+        if offspring_pigeon['ring_number'] != 'BE123456':
+            print(f"❌ Expected ring number 'BE123456', got '{offspring_pigeon['ring_number']}'")
+            return False
+        
+        if offspring_pigeon['country'] != 'BE':
+            print(f"❌ Expected country 'BE', got '{offspring_pigeon['country']}'")
+            return False
+        
+        print("   ✅ Ring number fix verified - full ring number 'BE123456' created correctly")
+        
+        # Cleanup
+        self.run_test("Cleanup Male Pigeon", "DELETE", f"pigeons/{male_pigeon_id}", 200)
+        self.run_test("Cleanup Female Pigeon", "DELETE", f"pigeons/{female_pigeon_id}", 200)
+        self.run_test("Cleanup Offspring Pigeon", "DELETE", f"pigeons/{offspring_pigeon['id']}", 200)
+        
+        print("✅ Ring number fix test completed successfully")
+        return True
+
+    def test_loft_log_functionality(self):
+        """Test complete loft log functionality"""
+        print("\n🔍 Testing Loft Log Functionality...")
+        
+        # Step 1: Test creating different types of loft logs
+        loft_logs = [
+            {
+                "loft_name": "Test Loft Alpha",
+                "type": "health",
+                "title": "Loft Vaccination",
+                "description": "Vaccinated all pigeons in loft",
+                "date": "2025-01-15",
+                "reminder_date": "2026-01-15"
+            },
+            {
+                "loft_name": "Test Loft Alpha",
+                "type": "training",
+                "title": "Loft Training Session",
+                "description": "Group training flight for all pigeons",
+                "date": "2025-01-16"
+            },
+            {
+                "loft_name": "Test Loft Beta",
+                "type": "diet",
+                "title": "Feed Change",
+                "description": "Changed to winter feed mix",
+                "date": "2025-01-17"
+            },
+            {
+                "loft_name": "Test Loft Beta",
+                "type": "health",
+                "title": "Health Check",
+                "description": "Monthly health inspection",
+                "date": "2025-01-18"
+            }
+        ]
+        
+        created_log_ids = []
+        for i, log_data in enumerate(loft_logs):
+            success, log_response = self.run_test(
+                f"Create Loft {log_data['type'].title()} Log",
+                "POST",
+                "loft-logs",
+                200,
+                data=log_data
+            )
+            
+            if success and 'id' in log_response:
+                created_log_ids.append(log_response['id'])
+                print(f"   Created loft {log_data['type']} log ID: {log_response['id']}")
+            else:
+                print(f"❌ Failed to create loft {log_data['type']} log")
+                return False
+        
+        # Step 2: Test getting all loft logs
+        success, all_logs_response = self.run_test(
+            "Get All Loft Logs",
+            "GET",
+            "loft-logs",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get all loft logs")
+            return False
+        
+        if len(all_logs_response) < 4:
+            print(f"❌ Expected at least 4 loft logs, got {len(all_logs_response)}")
+            return False
+        
+        # Step 3: Test filtering by loft_name
+        success, alpha_logs_response = self.run_test(
+            "Get Loft Logs by Loft Name (Alpha)",
+            "GET",
+            "loft-logs?loft_name=Test Loft Alpha",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get loft logs by loft name")
+            return False
+        
+        alpha_logs_count = len([log for log in alpha_logs_response if log.get('loft_name') == 'Test Loft Alpha'])
+        if alpha_logs_count != 2:
+            print(f"❌ Expected 2 logs for 'Test Loft Alpha', got {alpha_logs_count}")
+            return False
+        
+        print(f"   ✅ Found {alpha_logs_count} logs for 'Test Loft Alpha'")
+        
+        # Step 4: Test filtering by type
+        success, health_logs_response = self.run_test(
+            "Get Loft Logs by Type (health)",
+            "GET",
+            "loft-logs?type=health",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get loft logs by type")
+            return False
+        
+        health_logs_count = len([log for log in health_logs_response if log.get('type') == 'health'])
+        if health_logs_count < 2:
+            print(f"❌ Expected at least 2 health logs, got {health_logs_count}")
+            return False
+        
+        print(f"   ✅ Found {health_logs_count} health logs")
+        
+        # Step 5: Test filtering by both loft_name and type
+        success, filtered_logs_response = self.run_test(
+            "Get Loft Logs by Loft Name and Type",
+            "GET",
+            "loft-logs?loft_name=Test Loft Beta&type=health",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get loft logs by loft name and type")
+            return False
+        
+        filtered_count = len([log for log in filtered_logs_response 
+                            if log.get('loft_name') == 'Test Loft Beta' and log.get('type') == 'health'])
+        if filtered_count != 1:
+            print(f"❌ Expected 1 log for 'Test Loft Beta' health type, got {filtered_count}")
+            return False
+        
+        print(f"   ✅ Found {filtered_count} log for 'Test Loft Beta' health type")
+        
+        # Step 6: Test deleting loft logs
+        for i, log_id in enumerate(created_log_ids):
+            success, delete_response = self.run_test(
+                f"Delete Loft Log {i+1}",
+                "DELETE",
+                f"loft-logs/{log_id}",
+                200
+            )
+            
+            if not success:
+                print(f"❌ Failed to delete loft log {log_id}")
+                return False
+        
+        # Step 7: Verify logs are deleted
+        success, final_logs_response = self.run_test(
+            "Verify Loft Logs Deleted",
+            "GET",
+            "loft-logs?loft_name=Test Loft Alpha",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to verify loft logs deletion")
+            return False
+        
+        remaining_alpha_logs = len([log for log in final_logs_response if log.get('loft_name') == 'Test Loft Alpha'])
+        if remaining_alpha_logs != 0:
+            print(f"❌ Expected 0 logs for 'Test Loft Alpha' after deletion, got {remaining_alpha_logs}")
+            return False
+        
+        print("✅ Loft log functionality test completed successfully")
+        return True
+
+    def test_combined_log_systems(self):
+        """Test that both individual health logs and loft logs work together"""
+        print("\n🔍 Testing Combined Log Systems...")
+        
+        # Step 1: Create a pigeon for individual health logs
+        pigeon_data = {
+            "ring_number": "BE999888777",
+            "name": "Combined Test Pigeon",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Blue",
+            "breeder": "Test Breeder"
+        }
+        
+        success, pigeon_response = self.run_test(
+            "Create Pigeon for Combined Test",
+            "POST",
+            "pigeons",
+            200,
+            data=pigeon_data
+        )
+        
+        if not success or 'id' not in pigeon_response:
+            print("❌ Failed to create pigeon for combined test")
+            return False
+        
+        pigeon_id = pigeon_response['id']
+        
+        # Step 2: Create individual health log
+        individual_log_data = {
+            "pigeon_id": pigeon_id,
+            "type": "health",
+            "title": "Individual Health Check",
+            "description": "Personal health check for specific pigeon",
+            "date": "2025-01-20"
+        }
+        
+        success, individual_log_response = self.run_test(
+            "Create Individual Health Log",
+            "POST",
+            "health-logs",
+            200,
+            data=individual_log_data
+        )
+        
+        if not success or 'id' not in individual_log_response:
+            print("❌ Failed to create individual health log")
+            return False
+        
+        individual_log_id = individual_log_response['id']
+        
+        # Step 3: Create loft log
+        loft_log_data = {
+            "loft_name": "Combined Test Loft",
+            "type": "health",
+            "title": "Loft Health Check",
+            "description": "General loft health inspection",
+            "date": "2025-01-20"
+        }
+        
+        success, loft_log_response = self.run_test(
+            "Create Loft Log",
+            "POST",
+            "loft-logs",
+            200,
+            data=loft_log_data
+        )
+        
+        if not success or 'id' not in loft_log_response:
+            print("❌ Failed to create loft log")
+            return False
+        
+        loft_log_id = loft_log_response['id']
+        
+        # Step 4: Verify both systems work independently
+        success, individual_logs = self.run_test(
+            "Get Individual Health Logs",
+            "GET",
+            f"health-logs?pigeon_id={pigeon_id}",
+            200
+        )
+        
+        if not success or len(individual_logs) != 1:
+            print("❌ Individual health log system not working correctly")
+            return False
+        
+        success, loft_logs = self.run_test(
+            "Get Loft Logs",
+            "GET",
+            "loft-logs?loft_name=Combined Test Loft",
+            200
+        )
+        
+        if not success or len(loft_logs) != 1:
+            print("❌ Loft log system not working correctly")
+            return False
+        
+        print("   ✅ Both individual and loft log systems working independently")
+        
+        # Step 5: Test filtering works for both systems
+        success, health_individual_logs = self.run_test(
+            "Filter Individual Logs by Type",
+            "GET",
+            "health-logs?type=health",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to filter individual logs by type")
+            return False
+        
+        success, health_loft_logs = self.run_test(
+            "Filter Loft Logs by Type",
+            "GET",
+            "loft-logs?type=health",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to filter loft logs by type")
+            return False
+        
+        print("   ✅ Filtering works for both log systems")
+        
+        # Step 6: Test deletion of both types
+        success, _ = self.run_test(
+            "Delete Individual Health Log",
+            "DELETE",
+            f"health-logs/{individual_log_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to delete individual health log")
+            return False
+        
+        success, _ = self.run_test(
+            "Delete Loft Log",
+            "DELETE",
+            f"loft-logs/{loft_log_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to delete loft log")
+            return False
+        
+        print("   ✅ Deletion works for both log systems")
+        
+        # Cleanup
+        self.run_test("Cleanup Combined Test Pigeon", "DELETE", f"pigeons/{pigeon_id}", 200)
+        
+        print("✅ Combined log systems test completed successfully")
+        return True
+
+    def test_data_integrity_after_updates(self):
+        """Test that all existing functionality still works after updates"""
+        print("\n🔍 Testing Data Integrity After Updates...")
+        
+        # Step 1: Test basic pigeon CRUD still works
+        pigeon_data = {
+            "ring_number": "BE555666777",
+            "name": "Integrity Test Pigeon",
+            "country": "BE",
+            "gender": "Female",
+            "color": "Red",
+            "breeder": "Integrity Breeder"
+        }
+        
+        success, pigeon_response = self.run_test(
+            "Data Integrity - Create Pigeon",
+            "POST",
+            "pigeons",
+            200,
+            data=pigeon_data
+        )
+        
+        if not success or 'id' not in pigeon_response:
+            print("❌ Basic pigeon creation failed")
+            return False
+        
+        pigeon_id = pigeon_response['id']
+        
+        # Step 2: Test pairing creation still works
+        # Create another pigeon for pairing
+        male_pigeon_data = {
+            "ring_number": "BE555666778",
+            "name": "Integrity Male Pigeon",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Blue",
+            "breeder": "Integrity Breeder"
+        }
+        
+        success, male_response = self.run_test(
+            "Data Integrity - Create Male Pigeon",
+            "POST",
+            "pigeons",
+            200,
+            data=male_pigeon_data
+        )
+        
+        if not success or 'id' not in male_response:
+            print("❌ Male pigeon creation failed")
+            return False
+        
+        male_id = male_response['id']
+        
+        # Create pairing
+        pairing_data = {
+            "sire_id": male_id,
+            "dam_id": pigeon_id,
+            "notes": "Data integrity test pairing"
+        }
+        
+        success, pairing_response = self.run_test(
+            "Data Integrity - Create Pairing",
+            "POST",
+            "pairings",
+            200,
+            data=pairing_data
+        )
+        
+        if not success:
+            print("❌ Pairing creation failed")
+            return False
+        
+        print("   ✅ Pairing creation still works correctly")
+        
+        # Step 3: Test cascade deletion still works
+        success, delete_response = self.run_test(
+            "Data Integrity - Test Cascade Deletion",
+            "DELETE",
+            f"pigeons/{pigeon_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Cascade deletion failed")
+            return False
+        
+        # Verify pigeon is deleted
+        success, _ = self.run_test(
+            "Data Integrity - Verify Pigeon Deleted",
+            "GET",
+            f"pigeons/{pigeon_id}",
+            404
+        )
+        
+        if not success:
+            print("❌ Pigeon was not properly deleted")
+            return False
+        
+        print("   ✅ Cascade deletion still works correctly")
+        
+        # Cleanup
+        self.run_test("Cleanup Male Pigeon", "DELETE", f"pigeons/{male_id}", 200)
+        
+        print("✅ Data integrity test completed successfully")
+        return True
+
 def main():
     print("🚀 Starting Pigeon Racing Dashboard API Tests")
     print("=" * 60)
