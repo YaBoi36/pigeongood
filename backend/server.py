@@ -36,6 +36,7 @@ class Pigeon(BaseModel):
     gender: str  # "Male" or "Female"
     color: str
     breeder: str
+    loft: Optional[str] = None  # New loft field
     sire_ring: Optional[str] = None
     dam_ring: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
