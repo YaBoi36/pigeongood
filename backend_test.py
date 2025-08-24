@@ -516,6 +516,346 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         )
         return success
 
+    def test_pairing_functionality(self):
+        """Test complete pairing functionality workflow"""
+        print("\n🔍 Testing Pairing Functionality...")
+        
+        # Step 1: Create male and female pigeons for pairing
+        male_pigeon_data = {
+            "ring_number": "BE123456789",
+            "name": "Sire Test",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Blue",
+            "breeder": "Test Breeder"
+        }
+        
+        female_pigeon_data = {
+            "ring_number": "BE987654321",
+            "name": "Dam Test",
+            "country": "BE", 
+            "gender": "Female",
+            "color": "Red",
+            "breeder": "Test Breeder"
+        }
+        
+        # Create male pigeon
+        success, male_response = self.run_test(
+            "Create Male Pigeon for Pairing",
+            "POST",
+            "pigeons",
+            200,
+            data=male_pigeon_data
+        )
+        
+        if not success or 'id' not in male_response:
+            print("❌ Failed to create male pigeon")
+            return False
+        
+        male_pigeon_id = male_response['id']
+        print(f"   Created male pigeon ID: {male_pigeon_id}")
+        
+        # Create female pigeon
+        success, female_response = self.run_test(
+            "Create Female Pigeon for Pairing",
+            "POST",
+            "pigeons",
+            200,
+            data=female_pigeon_data
+        )
+        
+        if not success or 'id' not in female_response:
+            print("❌ Failed to create female pigeon")
+            return False
+        
+        female_pigeon_id = female_response['id']
+        print(f"   Created female pigeon ID: {female_pigeon_id}")
+        
+        # Step 2: Test creating a pairing
+        pairing_data = {
+            "sire_id": male_pigeon_id,
+            "dam_id": female_pigeon_id,
+            "expected_hatch_date": "2025-02-15",
+            "notes": "Test pairing for breeding program"
+        }
+        
+        success, pairing_response = self.run_test(
+            "Create Pairing",
+            "POST",
+            "pairings",
+            200,
+            data=pairing_data
+        )
+        
+        if not success or 'id' not in pairing_response:
+            print("❌ Failed to create pairing")
+            return False
+        
+        pairing_id = pairing_response['id']
+        print(f"   Created pairing ID: {pairing_id}")
+        
+        # Step 3: Test getting all pairings
+        success, pairings_response = self.run_test(
+            "Get All Pairings",
+            "GET",
+            "pairings",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get pairings")
+            return False
+        
+        # Step 4: Test gender validation - try to create pairing with wrong genders
+        success, error_response = self.run_test(
+            "Invalid Pairing - Wrong Gender (Should Fail)",
+            "POST",
+            "pairings",
+            400,
+            data={
+                "sire_id": female_pigeon_id,  # Female as sire (should fail)
+                "dam_id": male_pigeon_id,     # Male as dam (should fail)
+                "notes": "This should fail"
+            }
+        )
+        
+        if not success:
+            print("❌ Gender validation test failed")
+            return False
+        
+        # Step 5: Test creating offspring from pairing
+        offspring_data = {
+            "ring_number": "BE555666777",
+            "name": "Test Offspring",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Checker",
+            "breeder": "Test Breeder"
+        }
+        
+        success, offspring_response = self.run_test(
+            "Create Offspring from Pairing",
+            "POST",
+            f"pairings/{pairing_id}/result",
+            200,
+            data=offspring_data
+        )
+        
+        if not success:
+            print("❌ Failed to create offspring from pairing")
+            return False
+        
+        # Step 6: Verify offspring appears in pigeons collection
+        success, pigeons_response = self.run_test(
+            "Verify Offspring in Pigeons Collection",
+            "GET",
+            "pigeons?search=Test Offspring",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to verify offspring in pigeons collection")
+            return False
+        
+        offspring_found = any(p.get('ring_number') == 'BE555666777' for p in pigeons_response)
+        if not offspring_found:
+            print("❌ Offspring not found in pigeons collection")
+            return False
+        
+        print("   ✅ Offspring successfully created and found in pigeons collection")
+        
+        # Cleanup - delete created pigeons (cascade deletion will handle race results)
+        self.run_test("Cleanup Male Pigeon", "DELETE", f"pigeons/{male_pigeon_id}", 200)
+        self.run_test("Cleanup Female Pigeon", "DELETE", f"pigeons/{female_pigeon_id}", 200)
+        self.run_test("Cleanup Offspring Pigeon", "GET", "pigeons?search=Test Offspring", 200)
+        
+        # Find and delete offspring
+        success, search_response = self.run_test("Find Offspring for Cleanup", "GET", "pigeons?search=Test Offspring", 200)
+        if success and search_response:
+            for pigeon in search_response:
+                if pigeon.get('ring_number') == 'BE555666777':
+                    self.run_test("Cleanup Offspring Pigeon", "DELETE", f"pigeons/{pigeon['id']}", 200)
+                    break
+        
+        print("✅ Pairing functionality test completed successfully")
+        return True
+
+    def test_health_log_functionality(self):
+        """Test complete health log functionality"""
+        print("\n🔍 Testing Health Log Functionality...")
+        
+        # Step 1: Create a pigeon for health logs
+        pigeon_data = {
+            "ring_number": "BE111222333",
+            "name": "Health Test Pigeon",
+            "country": "BE",
+            "gender": "Male",
+            "color": "Blue",
+            "breeder": "Test Breeder"
+        }
+        
+        success, pigeon_response = self.run_test(
+            "Create Pigeon for Health Logs",
+            "POST",
+            "pigeons",
+            200,
+            data=pigeon_data
+        )
+        
+        if not success or 'id' not in pigeon_response:
+            print("❌ Failed to create pigeon for health logs")
+            return False
+        
+        pigeon_id = pigeon_response['id']
+        print(f"   Created pigeon ID: {pigeon_id}")
+        
+        # Step 2: Test creating different types of health logs
+        health_logs = [
+            {
+                "pigeon_id": pigeon_id,
+                "type": "health",
+                "title": "Vaccination",
+                "description": "Annual vaccination completed",
+                "date": "2025-01-15",
+                "reminder_date": "2026-01-15"
+            },
+            {
+                "pigeon_id": pigeon_id,
+                "type": "training",
+                "title": "Flight Training",
+                "description": "30km training flight completed",
+                "date": "2025-01-16"
+            },
+            {
+                "pigeon_id": pigeon_id,
+                "type": "diet",
+                "title": "Diet Change",
+                "description": "Switched to high-protein feed",
+                "date": "2025-01-17"
+            }
+        ]
+        
+        created_log_ids = []
+        for i, log_data in enumerate(health_logs):
+            success, log_response = self.run_test(
+                f"Create {log_data['type'].title()} Log",
+                "POST",
+                "health-logs",
+                200,
+                data=log_data
+            )
+            
+            if success and 'id' in log_response:
+                created_log_ids.append(log_response['id'])
+                print(f"   Created {log_data['type']} log ID: {log_response['id']}")
+            else:
+                print(f"❌ Failed to create {log_data['type']} log")
+                return False
+        
+        # Step 3: Test getting all health logs
+        success, all_logs_response = self.run_test(
+            "Get All Health Logs",
+            "GET",
+            "health-logs",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get all health logs")
+            return False
+        
+        # Step 4: Test filtering by pigeon_id
+        success, pigeon_logs_response = self.run_test(
+            "Get Health Logs by Pigeon ID",
+            "GET",
+            f"health-logs?pigeon_id={pigeon_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get health logs by pigeon ID")
+            return False
+        
+        # Verify we got the right logs
+        if len(pigeon_logs_response) != 3:
+            print(f"❌ Expected 3 logs for pigeon, got {len(pigeon_logs_response)}")
+            return False
+        
+        # Step 5: Test filtering by type
+        success, health_type_logs = self.run_test(
+            "Get Health Logs by Type",
+            "GET",
+            "health-logs?type=health",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get health logs by type")
+            return False
+        
+        # Step 6: Test pigeon validation - try to create log for non-existent pigeon
+        success, error_response = self.run_test(
+            "Invalid Health Log - Non-existent Pigeon (Should Fail)",
+            "POST",
+            "health-logs",
+            404,
+            data={
+                "pigeon_id": "nonexistent-id",
+                "type": "health",
+                "title": "Should Fail",
+                "date": "2025-01-15"
+            }
+        )
+        
+        if not success:
+            print("❌ Pigeon validation test failed")
+            return False
+        
+        # Step 7: Test deleting health logs
+        for i, log_id in enumerate(created_log_ids):
+            success, delete_response = self.run_test(
+                f"Delete Health Log {i+1}",
+                "DELETE",
+                f"health-logs/{log_id}",
+                200
+            )
+            
+            if not success:
+                print(f"❌ Failed to delete health log {log_id}")
+                return False
+        
+        # Step 8: Verify logs are deleted
+        success, final_logs_response = self.run_test(
+            "Verify Health Logs Deleted",
+            "GET",
+            f"health-logs?pigeon_id={pigeon_id}",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to verify health logs deletion")
+            return False
+        
+        if len(final_logs_response) != 0:
+            print(f"❌ Expected 0 logs after deletion, got {len(final_logs_response)}")
+            return False
+        
+        # Cleanup - delete test pigeon
+        self.run_test("Cleanup Health Test Pigeon", "DELETE", f"pigeons/{pigeon_id}", 200)
+        
+        print("✅ Health log functionality test completed successfully")
+        return True
+
+    def test_nonexistent_health_log_deletion(self):
+        """Test deleting non-existent health log"""
+        success, response = self.run_test(
+            "Delete Non-existent Health Log (Should Fail)",
+            "DELETE",
+            "health-logs/nonexistent-id",
+            404
+        )
+        return success
+
 def main():
     print("🚀 Starting Pigeon Racing Dashboard API Tests")
     print("=" * 60)
