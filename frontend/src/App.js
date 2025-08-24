@@ -1490,11 +1490,140 @@ const BreedingPairing = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Pairing records will go here */}
+              {pairings.map((pairing) => {
+                const sire = pigeons.find(p => p.id === pairing.sire_id);
+                const dam = pigeons.find(p => p.id === pairing.dam_id);
+                return (
+                  <div key={pairing.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
+                        <Heart className="w-6 h-6 text-pink-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">
+                          {sire?.name || 'Unknown'} × {dam?.name || 'Unknown'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {sire?.ring_number} × {dam?.ring_number}
+                        </p>
+                        {pairing.expected_hatch_date && (
+                          <p className="text-xs text-gray-400">Expected: {pairing.expected_hatch_date}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-green-600">
+                        {pairing.status}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedPairing(pairing);
+                          setAddResultOpen(true);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Result
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Add Result Dialog */}
+      <Dialog open={addResultOpen} onOpenChange={setAddResultOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Pairing Result</DialogTitle>
+            <DialogDescription>
+              Create a new pigeon from the breeding pair
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="result_ring_number">Ring Number *</Label>
+              <Input 
+                id="result_ring_number"
+                value={newResult.ring_number}
+                onChange={(e) => setNewResult({...newResult, ring_number: e.target.value})}
+                placeholder="501123456"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="result_name">Name (Optional)</Label>
+              <Input 
+                id="result_name"
+                value={newResult.name}
+                onChange={(e) => setNewResult({...newResult, name: e.target.value})}
+                placeholder="Young Champion"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="result_country">Country (Optional)</Label>
+                <Select onValueChange={(value) => setNewResult({...newResult, country: value})} defaultValue="NL">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BE">Belgium (BE)</SelectItem>
+                    <SelectItem value="NL">Netherlands (NL)</SelectItem>
+                    <SelectItem value="DE">Germany (DE)</SelectItem>
+                    <SelectItem value="FR">France (FR)</SelectItem>
+                    <SelectItem value="GB">United Kingdom (GB)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="result_gender">Gender (Optional)</Label>
+                <Select onValueChange={(value) => setNewResult({...newResult, gender: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="result_color">Color (Optional)</Label>
+                <Input 
+                  id="result_color"
+                  value={newResult.color}
+                  onChange={(e) => setNewResult({...newResult, color: e.target.value})}
+                  placeholder="Blue"
+                />
+              </div>
+              <div>
+                <Label htmlFor="result_breeder">Breeder (Optional)</Label>
+                <Input 
+                  id="result_breeder"
+                  value={newResult.breeder}
+                  onChange={(e) => setNewResult({...newResult, breeder: e.target.value})}
+                  placeholder="Your name"
+                />
+              </div>
+            </div>
+
+            <Button onClick={handleAddResult} className="w-full">
+              Create Pigeon from Pairing
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
