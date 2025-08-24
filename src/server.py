@@ -515,6 +515,23 @@ async def upload_race_results(file: UploadFile = File(...), total_pigeons_overri
                     logger.warning(f"Skipping duplicate result for ring {ring_number} in race {race_obj.id}")
                     continue
                 
+                # DUPLICATE PREVENTION FIX: Check if this pigeon already has a result on this DATE
+                # (regardless of race category) to prevent multiple results per day
+                existing_results_for_pigeon = await db.race_results.find({
+                    "ring_number": ring_number
+                }).to_list(1000)
+                
+                has_result_for_date = False
+                for existing_result in existing_results_for_pigeon:
+                    existing_race = await db.races.find_one({"id": existing_result["race_id"]})
+                    if existing_race and existing_race["date"] == race_obj.date:
+                        has_result_for_date = True
+                        logger.warning(f"Skipping duplicate result for ring {ring_number} on date {race_obj.date} - pigeon already has result for this date")
+                        break
+                
+                if has_result_for_date:
+                    continue
+                
                 # Recalculate coefficient with correct formula using the confirmed total (not parsed total)
                 # Use the race's total_pigeons which should be the confirmed count if overridden
                 actual_total_pigeons = min(race_obj.total_pigeons, 5000)  # Use race object's total, max 5000 pigeons in race
