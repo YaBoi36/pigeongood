@@ -754,7 +754,7 @@ async def get_pairings():
     return [Pairing(**parse_from_mongo(pairing)) for pairing in pairings]
 
 @api_router.post("/pairings/{pairing_id}/result")
-async def create_pairing_result(pairing_id: str, result: PairingResult):
+async def create_pairing_result(pairing_id: str, result: PairingResultCreate):
     # Validate pairing exists
     pairing = await db.pairings.find_one({"id": pairing_id})
     if not pairing:
