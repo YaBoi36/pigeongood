@@ -18,7 +18,13 @@ import {
   BarChart3,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Home,
+  Heart,
+  ShoppingCart,
+  Settings,
+  Menu,
+  X
 } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
@@ -34,20 +40,79 @@ import { Toaster } from "./components/ui/toaster";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Navigation Component
-const Navigation = () => {
-  const location = useLocation();
-  
+// Sidebar Navigation Component
+const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }) => {
+  const menuItems = [
+    { key: 'dashboard', label: 'Dashboard', icon: Home },
+    { key: 'my-pigeons', label: 'My Pigeons', icon: Bird },
+    { key: 'race-results', label: 'Race Results', icon: Trophy },
+    { key: 'breeding', label: 'Breeding & Pairing', icon: Heart },
+    { key: 'health', label: 'Health & Training', icon: Medal },
+    { key: 'sales', label: 'Sales & Transfers', icon: ShoppingCart },
+    { key: 'settings', label: 'Settings', icon: Settings },
+  ];
+
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center space-x-8">
+    <>
+      {/* Mobile backdrop */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        {/* Logo */}
+        <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Bird className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">PigeonPedigree</h1>
+              <p className="text-sm text-gray-500">Racing Performance</p>
+            </div>
+          </div>
+          {/* Mobile close button */}
+          <button 
+            className="lg:hidden"
+            onClick={() => setIsMobileOpen(false)}
+          >
+            <X className="w-6 h-6 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="p-4 space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.key}
+                onClick={() => {
+                  setActiveTab(item.key);
+                  setIsMobileOpen(false);
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                  activeTab === item.key
+                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </>
+  );
+};
               <p className="text-sm text-gray-500">Racing Performance</p>
             </div>
           </div>
