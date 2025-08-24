@@ -520,9 +520,12 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         """Test complete pairing functionality workflow"""
         print("\n🔍 Testing Pairing Functionality...")
         
-        # Step 1: Create male and female pigeons for pairing
+        # Step 1: Create male and female pigeons for pairing with unique ring numbers
+        import time
+        timestamp = str(int(time.time()))[-6:]  # Use last 6 digits of timestamp for uniqueness
+        
         male_pigeon_data = {
-            "ring_number": "BE123456789",
+            "ring_number": f"BE{timestamp}001",
             "name": "Sire Test",
             "country": "BE",
             "gender": "Male",
@@ -531,7 +534,7 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         }
         
         female_pigeon_data = {
-            "ring_number": "BE987654321",
+            "ring_number": f"BE{timestamp}002",
             "name": "Dam Test",
             "country": "BE", 
             "gender": "Female",
@@ -625,7 +628,7 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         
         # Step 5: Test creating offspring from pairing
         offspring_data = {
-            "ring_number": "BE555666777",
+            "ring_number": f"BE{timestamp}003",
             "name": "Test Offspring",
             "country": "BE",
             "gender": "Male",
@@ -657,7 +660,7 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
             print("❌ Failed to verify offspring in pigeons collection")
             return False
         
-        offspring_found = any(p.get('ring_number') == 'BE555666777' for p in pigeons_response)
+        offspring_found = any(p.get('ring_number') == f"BE{timestamp}003" for p in pigeons_response)
         if not offspring_found:
             print("❌ Offspring not found in pigeons collection")
             return False
@@ -667,13 +670,12 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         # Cleanup - delete created pigeons (cascade deletion will handle race results)
         self.run_test("Cleanup Male Pigeon", "DELETE", f"pigeons/{male_pigeon_id}", 200)
         self.run_test("Cleanup Female Pigeon", "DELETE", f"pigeons/{female_pigeon_id}", 200)
-        self.run_test("Cleanup Offspring Pigeon", "GET", "pigeons?search=Test Offspring", 200)
         
         # Find and delete offspring
         success, search_response = self.run_test("Find Offspring for Cleanup", "GET", "pigeons?search=Test Offspring", 200)
         if success and search_response:
             for pigeon in search_response:
-                if pigeon.get('ring_number') == 'BE555666777':
+                if pigeon.get('ring_number') == f"BE{timestamp}003":
                     self.run_test("Cleanup Offspring Pigeon", "DELETE", f"pigeons/{pigeon['id']}", 200)
                     break
         
