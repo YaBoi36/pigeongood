@@ -1433,6 +1433,201 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         print("✅ Data integrity test completed successfully")
         return True
 
+    def test_duplicate_prevention_multi_race_file(self):
+        """Test duplicate prevention logic for multi-race files with same date"""
+        print("\n🔍 Testing Duplicate Prevention for Multi-Race Files...")
+        
+        # Step 1: Create test pigeons that appear in result_new.txt
+        import time
+        timestamp = str(int(time.time()))[-6:]
+        
+        test_pigeons = [
+            {
+                "ring_number": "BE504574322",  # Appears in multiple races in result_new.txt
+                "name": "Duplicate Test Pigeon 1",
+                "country": "BE",
+                "gender": "Male",
+                "color": "Blue",
+                "breeder": "VRANCKEN WILLY&DOCHTE"
+            },
+            {
+                "ring_number": "BE504813624",  # Appears in multiple races in result_new.txt
+                "name": "Duplicate Test Pigeon 2", 
+                "country": "BE",
+                "gender": "Female",
+                "color": "Red",
+                "breeder": "BRIERS VALENT.&ZN"
+            },
+            {
+                "ring_number": "BE504965824",  # Appears in multiple races in result_new.txt
+                "name": "Duplicate Test Pigeon 3",
+                "country": "BE",
+                "gender": "Male",
+                "color": "Checker",
+                "breeder": "HERMANS RUBEN"
+            }
+        ]
+        
+        created_pigeons = []
+        for pigeon_data in test_pigeons:
+            success, response = self.run_test(
+                f"Create Pigeon {pigeon_data['ring_number']}",
+                "POST",
+                "pigeons",
+                200,
+                data=pigeon_data
+            )
+            
+            if success and 'id' in response:
+                created_pigeons.append(response['id'])
+                print(f"   Created pigeon: {pigeon_data['ring_number']} -> ID: {response['id']}")
+            else:
+                print(f"❌ Failed to create pigeon {pigeon_data['ring_number']}")
+        
+        if len(created_pigeons) != len(test_pigeons):
+            print("❌ Failed to create all test pigeons")
+            return False
+        
+        # Step 2: Upload the result_new.txt file which contains multiple races from same date (CHIMAY 09-08-25)
+        try:
+            with open('/app/result_new.txt', 'r') as f:
+                txt_content = f.read()
+        except FileNotFoundError:
+            print("❌ result_new.txt file not found")
+            return False
+        
+        files = {
+            'file': ('result_new.txt', txt_content, 'text/plain')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload Multi-Race File (result_new.txt)",
+            "POST", 
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if not success:
+            print("❌ Failed to upload multi-race results file")
+            return False
+        
+        print(f"   Upload response: {upload_response}")
+        
+        # Step 3: Verify race results and check for duplicates
+        success, results_response = self.run_test(
+            "Get Race Results After Multi-Race Upload",
+            "GET",
+            "race-results",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get race results")
+            return False
+        
+        # Step 4: Check duplicate prevention - each pigeon should have only ONE result per date
+        pigeon_results_by_ring = {}
+        for result in results_response:
+            if result.get('pigeon') and result['pigeon']['id'] in created_pigeons:
+                ring_number = result['ring_number']
+                if ring_number not in pigeon_results_by_ring:
+                    pigeon_results_by_ring[ring_number] = []
+                pigeon_results_by_ring[ring_number].append(result)
+        
+        duplicate_prevention_working = True
+        for ring_number, results in pigeon_results_by_ring.items():
+            if len(results) > 1:
+                # Check if all results are from the same date
+                dates = set()
+                for result in results:
+                    if result.get('race') and result['race'].get('date'):
+                        dates.add(result['race']['date'])
+                
+                if len(dates) == 1:  # Same date, should be prevented
+                    print(f"❌ DUPLICATE PREVENTION FAILED: Ring {ring_number} has {len(results)} results on same date {list(dates)[0]}")
+                    duplicate_prevention_working = False
+                else:
+                    print(f"   ✅ Ring {ring_number} has {len(results)} results on different dates - OK")
+            else:
+                print(f"   ✅ Ring {ring_number} has {len(results)} result - duplicate prevention working")
+        
+        # Step 5: Verify that races were created for different categories
+        success, races_response = self.run_test(
+            "Get All Races After Upload",
+            "GET",
+            "races" if hasattr(self, 'get_races_endpoint') else "race-results",  # Fallback if no races endpoint
+            200
+        )
+        
+        if success and isinstance(races_response, list):
+            chimay_races = []
+            for item in races_response:
+                # Check if it's a race or race result with race info
+                race_info = item.get('race') if 'race' in item else item
+                if race_info and race_info.get('race_name') == 'CHIMAY' and race_info.get('date') == '09-08-25':
+                    chimay_races.append(race_info)
+            
+            if len(chimay_races) > 1:
+                categories = [race.get('category', 'Unknown') for race in chimay_races]
+                print(f"   ✅ Found {len(chimay_races)} CHIMAY races with categories: {categories}")
+            else:
+                print(f"   ⚠️  Found {len(chimay_races)} CHIMAY races (expected multiple)")
+        
+        # Step 6: Test uploading the same file again - should not create more duplicates
+        print("\n   🔄 Testing duplicate file upload...")
+        success, second_upload_response = self.run_test(
+            "Upload Same File Again (Should Prevent Duplicates)",
+            "POST",
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if success:
+            # Check results count didn't increase inappropriately
+            success, final_results = self.run_test(
+                "Get Final Race Results",
+                "GET",
+                "race-results",
+                200
+            )
+            
+            if success:
+                final_pigeon_results = {}
+                for result in final_results:
+                    if result.get('pigeon') and result['pigeon']['id'] in created_pigeons:
+                        ring_number = result['ring_number']
+                        if ring_number not in final_pigeon_results:
+                            final_pigeon_results[ring_number] = []
+                        final_pigeon_results[ring_number].append(result)
+                
+                # Should still have same number of results per pigeon
+                for ring_number in pigeon_results_by_ring:
+                    original_count = len(pigeon_results_by_ring[ring_number])
+                    final_count = len(final_pigeon_results.get(ring_number, []))
+                    if final_count > original_count:
+                        print(f"❌ DUPLICATE PREVENTION FAILED: Ring {ring_number} results increased from {original_count} to {final_count}")
+                        duplicate_prevention_working = False
+                    else:
+                        print(f"   ✅ Ring {ring_number} results stable: {final_count} (duplicate upload prevented)")
+        
+        # Cleanup - delete created pigeons
+        for pigeon_id in created_pigeons:
+            self.run_test(
+                f"Cleanup Pigeon {pigeon_id}",
+                "DELETE",
+                f"pigeons/{pigeon_id}",
+                200
+            )
+        
+        if duplicate_prevention_working:
+            print("✅ Duplicate prevention test PASSED - each pigeon has only one result per date")
+            return True
+        else:
+            print("❌ Duplicate prevention test FAILED - duplicates were not properly prevented")
+            return False
+
 def main():
     print("🚀 Starting Pigeon Racing Dashboard API Tests")
     print("=" * 60)
