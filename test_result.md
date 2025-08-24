@@ -279,8 +279,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Clear all existing test data from the system"
-  stuck_tasks: []
+    - "Fix critical duplicate prevention bug in Node.js backend"
+  stuck_tasks: 
+    - "Fix critical duplicate prevention bug in Node.js backend"
   test_all: false
   test_priority: "high_first"
 
