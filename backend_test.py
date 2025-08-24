@@ -628,7 +628,7 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         
         # Step 5: Test creating offspring from pairing
         offspring_data = {
-            "ring_number": f"BE{timestamp}003",
+            "ring_number": f"{timestamp}003",  # Just the number part
             "name": "Test Offspring",
             "country": "BE",
             "gender": "Male",
