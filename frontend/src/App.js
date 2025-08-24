@@ -702,12 +702,12 @@ const RaceResults = () => {
       {/* Race Results List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Race Results</CardTitle>
-          <CardDescription>{raceResults.length} results recorded</CardDescription>
+          <CardTitle>Race Results</CardTitle>
+          <CardDescription>{filteredResults.length} results found</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {raceResults.map((result) => (
+            {filteredResults.map((result) => (
               <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
