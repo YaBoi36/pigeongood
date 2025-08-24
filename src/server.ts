@@ -16,7 +16,7 @@ import healthRouter from './routes/health';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 8001;
+const PORT = parseInt(process.env.PORT || '8001', 10);
 
 // Middleware
 app.use(helmet());
