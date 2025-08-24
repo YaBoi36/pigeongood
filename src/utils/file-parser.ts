@@ -9,17 +9,15 @@ export class RaceFileParser {
     
     let currentRace: Race | null = null;
     let inResultsSection = false;
+    let raceHeaderFound = false;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       
-      if (!line) continue;
+      if (!line || line.length < 3) continue;
       
-      // Check if this is a race header line
-      if (line.includes('UITSLAGEN') || line.includes('RESULTATEN') || 
-          (line.includes(' ') && line.split(' ').length >= 3 && !line.startsWith('NR'))) {
-        
-        // Extract race information from the line
+      // Look for race header patterns - be more specific
+      if (!raceHeaderFound && this.isRaceHeaderLine(line, lines, i)) {
         const raceInfo = this.extractRaceInfo(line, lines, i);
         if (raceInfo) {
           currentRace = {
@@ -33,28 +31,94 @@ export class RaceFileParser {
             created_at: new Date()
           };
           races.push(currentRace);
+          raceHeaderFound = true;
           inResultsSection = false;
+          console.log('Found race:', currentRace.race_name);
         }
       }
       
       // Check if we're entering the results section
-      if (line.startsWith('NR') && line.includes('Naam') && line.includes('Ring')) {
+      if (line.toLowerCase().includes('nr') && 
+          (line.toLowerCase().includes('naam') || line.toLowerCase().includes('name')) && 
+          (line.toLowerCase().includes('ring') || line.toLowerCase().includes('bague'))) {
         inResultsSection = true;
+        console.log('Found results header:', line);
         continue;
       }
       
-      // Parse result lines
-      if (inResultsSection && currentRace && line.match(/^\d+/)) {
+      // Parse result lines - only when we have a current race and are in results section
+      if (inResultsSection && currentRace && this.isResultLine(line)) {
         const result = this.parseResultLine(line, currentRace.id);
         if (result) {
-          // Calculate coefficient
-          result.coefficient = Math.min((result.position * 100) / currentRace.total_pigeons, 100);
+          // Calculate coefficient with max 5000 pigeons as specified
+          const maxPigeons = Math.min(currentRace.total_pigeons, 5000);
+          result.coefficient = (result.position * 100) / maxPigeons;
           results.push(result);
         }
       }
     }
     
+    console.log(`Parsed ${races.length} races and ${results.length} results`);
     return { races, results };
+  }
+  
+  private static isRaceHeaderLine(line: string, lines: string[], index: number): boolean {
+    // More specific race header detection
+    const raceIndicators = [
+      /UITSLAGEN/i,
+      /RESULTATEN/i,
+      /RESULTS/i,
+      /CLASSEMENT/i
+    ];
+    
+    // Check if this line contains race indicators
+    for (const indicator of raceIndicators) {
+      if (indicator.test(line)) {
+        return true;
+      }
+    }
+    
+    // Check if this looks like a race title (has date pattern nearby)
+    if (line.length > 10 && line.includes(' ')) {
+      for (let j = Math.max(0, index - 3); j <= Math.min(lines.length - 1, index + 3); j++) {
+        if (this.containsDate(lines[j])) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+  
+  private static isResultLine(line: string): boolean {
+    // A result line should start with a number (position) and have multiple parts
+    const parts = line.trim().split(/\s+/);
+    
+    // Must start with a number (position)
+    if (!/^\d+$/.test(parts[0])) {
+      return false;
+    }
+    
+    // Must have at least 6 parts: position, name, ring, distance, time, speed
+    if (parts.length < 6) {
+      return false;
+    }
+    
+    // Check if it has a ring number pattern (letters and numbers)
+    const hasRingPattern = parts.some(part => /^[A-Z]{1,3}\s*\d{6,9}$/i.test(part.replace(/\s+/g, '')));
+    
+    return hasRingPattern;
+  }
+  
+  private static containsDate(line: string): boolean {
+    // Look for date patterns
+    const datePatterns = [
+      /\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}/,
+      /\d{4}[-/.]\d{1,2}[-/.]\d{1,2}/,
+      /\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i
+    ];
+    
+    return datePatterns.some(pattern => pattern.test(line));
   }
   
   private static extractRaceInfo(line: string, lines: string[], index: number): any {
