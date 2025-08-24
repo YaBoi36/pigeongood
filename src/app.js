@@ -460,7 +460,7 @@ app.post('/api/confirm-race-upload', upload.single('file'), async (req, res) => 
             }
           }
           
-          if (hasResultForRaceAndDate) {
+          if (hasResultForDate) {
             continue;
           }
         }
