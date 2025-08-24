@@ -2009,11 +2009,47 @@ const HealthTraining = () => {
               <CardDescription>Track vaccinations, treatments, and medical history</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No health records yet</p>
-                <p className="text-sm text-gray-400">Add your first health record to get started</p>
-              </div>
+              {filteredLogs.length === 0 ? (
+                <div className="text-center py-8">
+                  <Stethoscope className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No health records yet</p>
+                  <p className="text-sm text-gray-400">Add your first health record to get started</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredLogs.map((log) => {
+                    const pigeon = pigeons.find(p => p.id === log.pigeon_id);
+                    return (
+                      <div key={log.id} className="flex items-start justify-between p-4 border rounded-lg">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                            <Stethoscope className="w-5 h-5 text-red-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{log.title}</h3>
+                            <p className="text-sm text-gray-600">{pigeon?.name || 'Unknown'} - {pigeon?.ring_number}</p>
+                            <p className="text-sm text-gray-500">{log.date}</p>
+                            {log.description && (
+                              <p className="text-sm text-gray-600 mt-1">{log.description}</p>
+                            )}
+                            {log.reminder_date && (
+                              <p className="text-xs text-orange-600 mt-1">Reminder: {log.reminder_date}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteLog(log.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -2025,11 +2061,44 @@ const HealthTraining = () => {
               <CardDescription>Log training flights, distances, and performance notes</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <TrendingUp className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No training sessions recorded</p>
-                <p className="text-sm text-gray-400">Start logging training sessions to track progress</p>
-              </div>
+              {filteredLogs.length === 0 ? (
+                <div className="text-center py-8">
+                  <TrendingUp className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No training sessions recorded</p>
+                  <p className="text-sm text-gray-400">Start logging training sessions to track progress</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredLogs.map((log) => {
+                    const pigeon = pigeons.find(p => p.id === log.pigeon_id);
+                    return (
+                      <div key={log.id} className="flex items-start justify-between p-4 border rounded-lg">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{log.title}</h3>
+                            <p className="text-sm text-gray-600">{pigeon?.name || 'Unknown'} - {pigeon?.ring_number}</p>
+                            <p className="text-sm text-gray-500">{log.date}</p>
+                            {log.description && (
+                              <p className="text-sm text-gray-600 mt-1">{log.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteLog(log.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -2041,11 +2110,44 @@ const HealthTraining = () => {
               <CardDescription>Manage feeding schedules and nutritional information</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No diet plans recorded</p>
-                <p className="text-sm text-gray-400">Create diet plans to optimize nutrition</p>
-              </div>
+              {filteredLogs.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No diet plans recorded</p>
+                  <p className="text-sm text-gray-400">Create diet plans to optimize nutrition</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredLogs.map((log) => {
+                    const pigeon = pigeons.find(p => p.id === log.pigeon_id);
+                    return (
+                      <div key={log.id} className="flex items-start justify-between p-4 border rounded-lg">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                            <BookOpen className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{log.title}</h3>
+                            <p className="text-sm text-gray-600">{pigeon?.name || 'Unknown'} - {pigeon?.ring_number}</p>
+                            <p className="text-sm text-gray-500">{log.date}</p>
+                            {log.description && (
+                              <p className="text-sm text-gray-600 mt-1">{log.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteLog(log.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
