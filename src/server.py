@@ -260,8 +260,9 @@ def parse_race_file(content: str) -> Dict[str, Any]:
             i += 1
             continue
             
-        # Skip column headers
-        if any(header in line.upper() for header in ['NR', 'NAAM', 'RING', 'NOM', 'BAGUE', 'VITESSE', 'SNELH']):
+        # Skip column headers (but not result lines that start with numbers)
+        if (any(header in line.upper() for header in ['NR', 'NAAM', 'RING', 'NOM', 'BAGUE', 'VITESSE', 'SNELH']) and 
+            not re.match(r'^\s*\d+', line)):
             i += 1
             continue
             
