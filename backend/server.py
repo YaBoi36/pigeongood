@@ -826,16 +826,16 @@ async def create_loft_log(log: LoftLogCreate):
     await db.loft_logs.insert_one(log_data)
     return log_obj
 
-@api_router.get("/health-logs", response_model=List[HealthLog])
-async def get_health_logs(pigeon_id: Optional[str] = None, type: Optional[str] = None):
+@api_router.get("/loft-logs", response_model=List[LoftLog])
+async def get_loft_logs(loft_name: Optional[str] = None, type: Optional[str] = None):
     query = {}
-    if pigeon_id:
-        query["pigeon_id"] = pigeon_id
+    if loft_name:
+        query["loft_name"] = loft_name
     if type:
         query["type"] = type
     
-    logs = await db.health_logs.find(query).sort("date", -1).to_list(1000)
-    return [HealthLog(**parse_from_mongo(log)) for log in logs]
+    logs = await db.loft_logs.find(query).sort("date", -1).to_list(1000)
+    return [LoftLog(**parse_from_mongo(log)) for log in logs]
 
 @api_router.delete("/health-logs/{log_id}")
 async def delete_health_log(log_id: str):
