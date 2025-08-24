@@ -104,6 +104,14 @@ class PairingCreate(BaseModel):
     expected_hatch_date: Optional[str] = None
     notes: Optional[str] = None
 
+class PairingResultCreate(BaseModel):
+    ring_number: str
+    name: Optional[str] = None
+    country: str = "NL"
+    gender: Optional[str] = None
+    color: Optional[str] = None
+    breeder: Optional[str] = None
+
 class PairingResult(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     pairing_id: str
