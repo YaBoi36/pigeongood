@@ -815,6 +815,46 @@ async def create_pairing_result(pairing_id: str, result: PairingResultCreate):
     
     return {"message": "Pairing result created successfully", "pigeon": new_pigeon}
 
+# Health log endpoints
+class HealthLogCreate(BaseModel):
+    pigeon_id: str
+    type: str  # health, training, diet
+    title: str
+    description: Optional[str] = None
+    date: str
+    reminder_date: Optional[str] = None
+
+@api_router.post("/health-logs", response_model=HealthLog)
+async def create_health_log(log: HealthLogCreate):
+    # Validate that pigeon exists
+    pigeon = await db.pigeons.find_one({"id": log.pigeon_id})
+    if not pigeon:
+        raise HTTPException(status_code=404, detail="Pigeon not found")
+    
+    log_dict = log.dict()
+    log_obj = HealthLog(**log_dict)
+    log_data = prepare_for_mongo(log_obj.dict())
+    await db.health_logs.insert_one(log_data)
+    return log_obj
+
+@api_router.get("/health-logs", response_model=List[HealthLog])
+async def get_health_logs(pigeon_id: Optional[str] = None, type: Optional[str] = None):
+    query = {}
+    if pigeon_id:
+        query["pigeon_id"] = pigeon_id
+    if type:
+        query["type"] = type
+    
+    logs = await db.health_logs.find(query).sort("date", -1).to_list(1000)
+    return [HealthLog(**parse_from_mongo(log)) for log in logs]
+
+@api_router.delete("/health-logs/{log_id}")
+async def delete_health_log(log_id: str):
+    result = await db.health_logs.delete_one({"id": log_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Health log not found")
+    return {"message": "Health log deleted successfully"}
+
 # Loft log endpoints
 @api_router.post("/loft-logs", response_model=LoftLog)
 async def create_loft_log(log: LoftLogCreate):
