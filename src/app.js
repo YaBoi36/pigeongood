@@ -465,6 +465,59 @@ app.post('/api/confirm-race-upload', upload.single('file'), async (req, res) => 
   }
 });
 
+// Delete pigeon (with cascade deletion of race results)
+app.delete('/api/pigeons/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the pigeon first to get its ring number
+    const pigeon = await db.collection('pigeons').findOne({ id });
+    if (!pigeon) {
+      return res.status(404).json({ detail: 'Pigeon not found' });
+    }
+    
+    // Delete associated race results (cascade deletion)
+    const raceResultsDeleted = await db.collection('race_results').deleteMany({ 
+      ring_number: pigeon.ring_number 
+    });
+    
+    // Delete the pigeon
+    const result = await db.collection('pigeons').deleteOne({ id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ detail: 'Pigeon not found' });
+    }
+    
+    console.log(`Deleted pigeon ${pigeon.ring_number} and ${raceResultsDeleted.deletedCount} associated race results`);
+    
+    res.json({ 
+      message: 'Pigeon deleted successfully',
+      race_results_deleted: raceResultsDeleted.deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting pigeon:', error);
+    res.status(500).json({ detail: 'Failed to delete pigeon' });
+  }
+});
+
+// Delete race result
+app.delete('/api/race-results/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await db.collection('race_results').deleteOne({ id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ detail: 'Race result not found' });
+    }
+    
+    console.log(`Deleted race result ${id}`);
+    
+    res.json({ message: 'Race result deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting race result:', error);
+    res.status(500).json({ detail: 'Failed to delete race result' });
+  }
+});
+
 // Clear test data
 app.delete('/api/clear-test-data', async (req, res) => {
   try {
