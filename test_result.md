@@ -207,6 +207,21 @@ backend:
         agent: "testing"
         comment: "DATA INTEGRITY VERIFIED: All existing functionality continues to work correctly after latest updates. ✅ Basic pigeon CRUD operations still work ✅ Pairing creation still works correctly ✅ Cascade deletion still functions properly ✅ All previous features remain intact ✅ No regression issues detected ✅ System stability maintained. Data integrity test passed successfully."
 
+  - task: "Fix duplicate prevention logic for multi-race files"
+    implemented: true
+    working: false
+    file: "/app/src/routes/races.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Duplicate prevention was failing when uploading files containing multiple races from the same date. Same pigeon could appear in multiple races (different categories) on same date."
+      - working: false
+        agent: "main"
+        comment: "FIXED: Updated duplicate prevention logic to check for same pigeon on same date across all races, not just same race_id. Added batch processing tracking with processedPigeonsToday Set to prevent duplicates within current file processing. Now checks both existing database results and current batch processing to ensure only one result per pigeon per date."
+
 frontend:
   - task: "Verify pigeon deletion and race result display"
     implemented: true
