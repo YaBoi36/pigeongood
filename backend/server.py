@@ -716,6 +716,107 @@ async def get_dashboard_stats():
         "top_performers": enhanced_performers
     }
 
+# Pairing endpoints
+@api_router.post("/pairings", response_model=Pairing)
+async def create_pairing(pairing: PairingCreate):
+    # Validate that both pigeons exist
+    sire = await db.pigeons.find_one({"id": pairing.sire_id})
+    dam = await db.pigeons.find_one({"id": pairing.dam_id})
+    
+    if not sire:
+        raise HTTPException(status_code=404, detail="Sire (father) pigeon not found")
+    if not dam:
+        raise HTTPException(status_code=404, detail="Dam (mother) pigeon not found")
+    
+    # Validate gender if available
+    if sire.get('gender') and sire['gender'] != 'Male':
+        raise HTTPException(status_code=400, detail="Sire must be male")
+    if dam.get('gender') and dam['gender'] != 'Female':
+        raise HTTPException(status_code=400, detail="Dam must be female")
+    
+    pairing_dict = pairing.dict()
+    pairing_obj = Pairing(**pairing_dict)
+    pairing_data = prepare_for_mongo(pairing_obj.dict())
+    await db.pairings.insert_one(pairing_data)
+    return pairing_obj
+
+@api_router.get("/pairings", response_model=List[Pairing])
+async def get_pairings():
+    pairings = await db.pairings.find().to_list(1000)
+    return [Pairing(**parse_from_mongo(pairing)) for pairing in pairings]
+
+@api_router.post("/pairings/{pairing_id}/result")
+async def create_pairing_result(pairing_id: str, result: PairingResult):
+    # Validate pairing exists
+    pairing = await db.pairings.find_one({"id": pairing_id})
+    if not pairing:
+        raise HTTPException(status_code=404, detail="Pairing not found")
+    
+    # Check if ring number already exists
+    existing = await db.pigeons.find_one({"ring_number": result.ring_number})
+    if existing:
+        raise HTTPException(status_code=400, detail="Pigeon with this ring number already exists")
+    
+    # Get parent pigeons for pedigree information
+    sire = await db.pigeons.find_one({"id": pairing["sire_id"]})
+    dam = await db.pigeons.find_one({"id": pairing["dam_id"]})
+    
+    # Create new pigeon with parent information
+    new_pigeon = Pigeon(
+        ring_number=result.ring_number,
+        name=result.name or f"Child of {sire['name'] if sire.get('name') else sire['ring_number']} x {dam['name'] if dam.get('name') else dam['ring_number']}",
+        country=result.country,
+        gender=result.gender or "Unknown",
+        color=result.color or "",
+        breeder=result.breeder or sire.get('breeder', ''),
+        sire_ring=sire['ring_number'],
+        dam_ring=dam['ring_number']
+    )
+    
+    pigeon_data = prepare_for_mongo(new_pigeon.dict())
+    await db.pigeons.insert_one(pigeon_data)
+    
+    # Store pairing result
+    result_dict = result.dict()
+    result_dict['pairing_id'] = pairing_id
+    result_obj = PairingResult(**result_dict)
+    result_data = prepare_for_mongo(result_obj.dict())
+    await db.pairing_results.insert_one(result_data)
+    
+    return {"message": "Pairing result created successfully", "pigeon": new_pigeon}
+
+# Health log endpoints
+@api_router.post("/health-logs", response_model=HealthLog)
+async def create_health_log(log: HealthLogCreate):
+    # Validate pigeon exists
+    pigeon = await db.pigeons.find_one({"id": log.pigeon_id})
+    if not pigeon:
+        raise HTTPException(status_code=404, detail="Pigeon not found")
+    
+    log_dict = log.dict()
+    log_obj = HealthLog(**log_dict)
+    log_data = prepare_for_mongo(log_obj.dict())
+    await db.health_logs.insert_one(log_data)
+    return log_obj
+
+@api_router.get("/health-logs", response_model=List[HealthLog])
+async def get_health_logs(pigeon_id: Optional[str] = None, type: Optional[str] = None):
+    query = {}
+    if pigeon_id:
+        query["pigeon_id"] = pigeon_id
+    if type:
+        query["type"] = type
+    
+    logs = await db.health_logs.find(query).sort("date", -1).to_list(1000)
+    return [HealthLog(**parse_from_mongo(log)) for log in logs]
+
+@api_router.delete("/health-logs/{log_id}")
+async def delete_health_log(log_id: str):
+    result = await db.health_logs.delete_one({"id": log_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Health log not found")
+    return {"message": "Health log deleted successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
