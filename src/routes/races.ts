@@ -96,19 +96,18 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
         // Check for duplicates (same pigeon, same date - prevent multiple results per day)
         const race = races.find(r => r.id === result.race_id);
         if (race) {
+          // Check against existing database results for this pigeon on this date
           const existingResult = await database.raceResults.findOne({
-            ring_number: result.ring_number,
-            $expr: {
-              $eq: [
-                { $dateToString: { format: "%Y-%m-%d", date: { $dateFromString: { dateString: "$created_at" } } } },
-                race.date
-              ]
-            }
+            ring_number: result.ring_number
           });
           
           if (existingResult) {
-            console.log(`Duplicate result found for ${result.ring_number} on date ${race.date} - skipping`);
-            continue;
+            // Get the race for the existing result to compare dates
+            const existingRace = await database.races.findOne({ id: existingResult.race_id });
+            if (existingRace && existingRace.date === race.date) {
+              console.log(`Duplicate result found for ${result.ring_number} on date ${race.date} - skipping`);
+              continue;
+            }
           }
         }
         
