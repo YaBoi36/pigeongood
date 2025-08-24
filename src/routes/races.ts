@@ -137,6 +137,117 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
   }
 });
 
+// Confirm and process race results file upload  
+router.post('/confirm-race-upload', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ detail: 'No file uploaded' });
+      return;
+    }
+    
+    const fileContent = req.file.buffer.toString('utf-8');
+    const { races, results } = parseRaceFile(fileContent);
+    
+    // Get all registered pigeons
+    const registeredPigeons = await database.pigeons.find({}).toArray();
+    const registeredRingNumbers = new Set(registeredPigeons.map(p => p.ring_number));
+    
+    let racesInserted = 0;
+    let resultsInserted = 0;
+    const parsedPigeonCounts: number[] = [];
+    
+    // Insert races first
+    for (const race of races) {
+      try {
+        const raceForMongo = database.prepareForMongo(race);
+        await database.races.insertOne(raceForMongo);
+        racesInserted++;
+        parsedPigeonCounts.push(race.total_pigeons);
+        console.log(`Processing race: ${JSON.stringify({
+          organization: race.organisation,
+          race_name: race.race_name,
+          date: race.date,
+          total_pigeons: race.total_pigeons,
+          participants: race.participants,
+          unloading_time: race.unloading_time
+        })}`);
+      } catch (error) {
+        console.error('Error inserting race:', error);
+      }
+    }
+    
+    // Insert results (only for registered pigeons and prevent duplicates)
+    for (const result of results) {
+      try {
+        // Only process results for registered pigeons
+        if (!registeredRingNumbers.has(result.ring_number)) {
+          console.log(`Skipping result for unregistered pigeon ${result.ring_number}`);
+          continue;
+        }
+        
+        // Find the pigeon and set pigeon_id
+        const pigeon = registeredPigeons.find(p => p.ring_number === result.ring_number);
+        if (pigeon) {
+          result.pigeon_id = pigeon.id;
+        }
+        
+        console.log(`Processing result: ${JSON.stringify({
+          ring_number: result.ring_number,
+          owner_name: result.owner_name,
+          city: result.city,
+          position: result.position,
+          distance: result.distance,
+          time: result.time,
+          speed: result.speed,
+          coefficient: result.coefficient
+        })}`);
+        
+        // DUPLICATE PREVENTION: Check if this pigeon already has a result in this specific race AND date
+        const currentRace = races.find(r => r.id === result.race_id);
+        if (currentRace) {
+          const existingResultsForPigeon = await database.raceResults.find({
+            ring_number: result.ring_number
+          }).toArray();
+          
+          let hasResultForRaceAndDate = false;
+          for (const existingResult of existingResultsForPigeon) {
+            const existingRace = await database.races.findOne({ id: existingResult.race_id });
+            if (existingRace && 
+                existingRace.race_name === currentRace.race_name && 
+                existingRace.date === currentRace.date) {
+              hasResultForRaceAndDate = true;
+              console.log(`Skipping duplicate result for ring ${result.ring_number} in race "${currentRace.race_name}" on date ${currentRace.date} - pigeon already has result for this race and date`);
+              break;
+            }
+          }
+          
+          if (hasResultForRaceAndDate) {
+            continue;
+          }
+        }
+        
+        const resultForMongo = database.prepareForMongo(result);
+        await database.raceResults.insertOne(resultForMongo);
+        resultsInserted++;
+        console.log(`Created result for ${result.ring_number}`);
+      } catch (error) {
+        console.error('Error inserting result:', error);
+      }
+    }
+    
+    res.json({
+      message: `Successfully processed ${racesInserted} races with ${resultsInserted} results`,
+      races: racesInserted,
+      results: resultsInserted,
+      needs_pigeon_count_confirmation: false,
+      parsed_pigeon_counts: parsedPigeonCounts
+    });
+  } catch (error) {
+    console.error('Error processing race file:', error);
+    res.status(500).json({ detail: 'Failed to process race file' });
+  }
+});
+
 // Clear test data
 router.delete('/clear-test-data', async (req: Request, res: Response): Promise<void> => {
   try {
