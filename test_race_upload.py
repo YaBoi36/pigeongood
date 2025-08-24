@@ -3,7 +3,7 @@ import requests
 import io
 
 # Test race results upload
-base_url = "https://race-loft.preview.emergentagent.com"
+base_url = "https://flight-results-1.preview.emergentagent.com"
 api_url = f"{base_url}/api"
 
 # Create race results TXT file with both pigeons
