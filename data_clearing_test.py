@@ -9,17 +9,8 @@ import json
 import os
 from datetime import datetime
 
-# Get backend URL from frontend .env file
-try:
-    with open('/app/frontend/.env', 'r') as f:
-        for line in f:
-            if line.startswith('REACT_APP_BACKEND_URL='):
-                BACKEND_URL = line.split('=', 1)[1].strip()
-                break
-        else:
-            BACKEND_URL = "http://localhost:8001"
-except:
-    BACKEND_URL = "http://localhost:8001"
+# Use localhost for direct backend testing
+BACKEND_URL = "http://localhost:8001"
 
 API_BASE = f"{BACKEND_URL}/api"
 
