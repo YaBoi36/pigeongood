@@ -33,10 +33,10 @@ class DuplicatePreventionTester:
     def test_health_check(self):
         """Test if backend is running"""
         try:
-            response = requests.get(f"{BACKEND_URL}/", timeout=10)
+            # Test with pigeons endpoint since root might not be accessible
+            response = requests.get(f"{API_BASE}/pigeons", timeout=10)
             if response.status_code == 200:
-                data = response.json()
-                self.log_test("Backend Health Check", True, f"Version: {data.get('version', 'unknown')}")
+                self.log_test("Backend Health Check", True, f"API responding correctly")
                 return True
             else:
                 self.log_test("Backend Health Check", False, f"Status code: {response.status_code}")
