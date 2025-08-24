@@ -93,16 +93,29 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
           result.pigeon_id = pigeon.id;
         }
         
-        // DUPLICATE PREVENTION: Check if this pigeon already has a result in this SPECIFIC RACE
-        // (allows same pigeon in different races/categories on same date)
-        const existingResultInRace = await database.raceResults.findOne({
-          race_id: result.race_id,
-          ring_number: result.ring_number
-        });
-        
-        if (existingResultInRace) {
-          console.log(`Skipping duplicate result for ring ${result.ring_number} in race ${result.race_id} - pigeon already has result in this specific race`);
-          continue;
+        // DUPLICATE PREVENTION: Check if this pigeon already has a result in this specific race AND date
+        // (allows same pigeon in different races/categories on same date, but prevents same race/date duplicates)
+        const currentRace = races.find(r => r.id === result.race_id);
+        if (currentRace) {
+          const existingResultsForPigeon = await database.raceResults.find({
+            ring_number: result.ring_number
+          }).toArray();
+          
+          let hasResultForRaceAndDate = false;
+          for (const existingResult of existingResultsForPigeon) {
+            const existingRace = await database.races.findOne({ id: existingResult.race_id });
+            if (existingRace && 
+                existingRace.race_name === currentRace.race_name && 
+                existingRace.date === currentRace.date) {
+              hasResultForRaceAndDate = true;
+              console.log(`Skipping duplicate result for ring ${result.ring_number} in race "${currentRace.race_name}" on date ${currentRace.date} - pigeon already has result for this race and date`);
+              break;
+            }
+          }
+          
+          if (hasResultForRaceAndDate) {
+            continue;
+          }
         }
         
         const resultForMongo = database.prepareForMongo(result);
