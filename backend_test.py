@@ -886,6 +886,12 @@ def main():
     test_results.append(tester.test_get_race_results())
     test_results.append(tester.test_get_pigeon_stats())
     
+    # NEW FUNCTIONALITY TESTS
+    print("\n" + "🆕" * 20 + " NEW FUNCTIONALITY TESTS " + "🆕" * 20)
+    test_results.append(tester.test_pairing_functionality())
+    test_results.append(tester.test_health_log_functionality())
+    test_results.append(tester.test_nonexistent_health_log_deletion())
+    
     # PRIORITY TESTS - Cascade Deletion and Ring Number Matching
     print("\n" + "🎯" * 20 + " PRIORITY TESTS " + "🎯" * 20)
     test_results.append(tester.test_cascade_deletion())
