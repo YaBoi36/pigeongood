@@ -1876,24 +1876,71 @@ const HealthTraining = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="pigeon">Select Pigeon *</Label>
-                <Select onValueChange={(value) => setNewLog({...newLog, pigeon_id: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Pigeon" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pigeons.map((pigeon) => (
-                      <SelectItem key={pigeon.id} value={pigeon.id}>
-                        {pigeon.name || 'Unnamed'} - {pigeon.ring_number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Entry Type</Label>
+                <div className="flex space-x-4 mt-2">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      value="individual"
+                      checked={logMode === 'individual'}
+                      onChange={(e) => setLogMode(e.target.value)}
+                      className="text-blue-600"
+                    />
+                    <span>Individual Pigeon</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      value="loft"
+                      checked={logMode === 'loft'}
+                      onChange={(e) => setLogMode(e.target.value)}
+                      className="text-blue-600"
+                    />
+                    <span>Entire Loft</span>
+                  </label>
+                </div>
               </div>
+
+              {logMode === 'individual' ? (
+                <div>
+                  <Label htmlFor="pigeon">Select Pigeon *</Label>
+                  <Select onValueChange={(value) => setNewLog({...newLog, pigeon_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Pigeon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pigeons.map((pigeon) => (
+                        <SelectItem key={pigeon.id} value={pigeon.id}>
+                          {pigeon.name || 'Unnamed'} - {pigeon.ring_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="loft_name">Loft/Breeder Name *</Label>
+                  <Input 
+                    id="loft_name"
+                    value={newLoftLog.loft_name}
+                    onChange={(e) => setNewLoftLog({...newLoftLog, loft_name: e.target.value})}
+                    placeholder="Enter loft or breeder name"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="type">Log Type *</Label>
-                <Select onValueChange={(value) => setNewLog({...newLog, type: value})} defaultValue="health">
+                <Select 
+                  onValueChange={(value) => {
+                    if (logMode === 'individual') {
+                      setNewLog({...newLog, type: value});
+                    } else {
+                      setNewLoftLog({...newLoftLog, type: value});
+                    }
+                  }} 
+                  defaultValue="health"
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -1909,8 +1956,14 @@ const HealthTraining = () => {
                 <Label htmlFor="title">Title *</Label>
                 <Input 
                   id="title"
-                  value={newLog.title}
-                  onChange={(e) => setNewLog({...newLog, title: e.target.value})}
+                  value={logMode === 'individual' ? newLog.title : newLoftLog.title}
+                  onChange={(e) => {
+                    if (logMode === 'individual') {
+                      setNewLog({...newLog, title: e.target.value});
+                    } else {
+                      setNewLoftLog({...newLoftLog, title: e.target.value});
+                    }
+                  }}
                   placeholder="e.g., Vaccination, Training Flight, Diet Change"
                 />
               </div>
@@ -1919,8 +1972,14 @@ const HealthTraining = () => {
                 <Label htmlFor="description">Description</Label>
                 <Textarea 
                   id="description"
-                  value={newLog.description}
-                  onChange={(e) => setNewLog({...newLog, description: e.target.value})}
+                  value={logMode === 'individual' ? newLog.description : newLoftLog.description}
+                  onChange={(e) => {
+                    if (logMode === 'individual') {
+                      setNewLog({...newLog, description: e.target.value});
+                    } else {
+                      setNewLoftLog({...newLoftLog, description: e.target.value});
+                    }
+                  }}
                   placeholder="Additional details..."
                 />
               </div>
@@ -1931,8 +1990,14 @@ const HealthTraining = () => {
                   <Input 
                     id="date"
                     type="date"
-                    value={newLog.date}
-                    onChange={(e) => setNewLog({...newLog, date: e.target.value})}
+                    value={logMode === 'individual' ? newLog.date : newLoftLog.date}
+                    onChange={(e) => {
+                      if (logMode === 'individual') {
+                        setNewLog({...newLog, date: e.target.value});
+                      } else {
+                        setNewLoftLog({...newLoftLog, date: e.target.value});
+                      }
+                    }}
                   />
                 </div>
                 <div>
@@ -1940,14 +2005,20 @@ const HealthTraining = () => {
                   <Input 
                     id="reminder_date"
                     type="date"
-                    value={newLog.reminder_date}
-                    onChange={(e) => setNewLog({...newLog, reminder_date: e.target.value})}
+                    value={logMode === 'individual' ? newLog.reminder_date : newLoftLog.reminder_date}
+                    onChange={(e) => {
+                      if (logMode === 'individual') {
+                        setNewLog({...newLog, reminder_date: e.target.value});
+                      } else {
+                        setNewLoftLog({...newLoftLog, reminder_date: e.target.value});
+                      }
+                    }}
                   />
                 </div>
               </div>
 
               <Button onClick={handleAddLog} className="w-full">
-                Add Log Entry
+                Add {logMode === 'individual' ? 'Individual' : 'Loft'} Log Entry
               </Button>
             </div>
           </DialogContent>
