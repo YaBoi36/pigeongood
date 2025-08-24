@@ -78,10 +78,19 @@ export class RaceFileParser {
       }
     }
     
-    // Check if this looks like a race title (has date pattern nearby)
-    if (line.length > 10 && line.includes(' ')) {
-      for (let j = Math.max(0, index - 3); j <= Math.min(lines.length - 1, index + 3); j++) {
+    // Check for race info pattern: "Location Date PigeonCount Type"
+    // Example: "Mettet 20-08-25 357 Jongen"
+    const raceInfoPattern = /^[A-Za-z\s]+\s+\d{2}-\d{2}-\d{2}\s+\d{2,4}\s+[A-Za-z]+/;
+    if (raceInfoPattern.test(line)) {
+      console.log('Found race info line:', line);
+      return true;
+    }
+    
+    // Check if this looks like a race title with date nearby
+    if (line.length > 10 && line.includes(' ') && !line.includes('---') && !/^NR/.test(line)) {
+      for (let j = Math.max(0, index - 2); j <= Math.min(lines.length - 1, index + 2); j++) {
         if (this.containsDate(lines[j])) {
+          console.log('Found race with nearby date:', line);
           return true;
         }
       }
