@@ -545,7 +545,94 @@ const RaceResults = () => {
         </Dialog>
       </div>
 
-      {/* Performance Stats */}
+      {/* Filters Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Filter className="w-5 h-5" />
+            <span>Filter Results</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="md:col-span-2">
+              <Label htmlFor="search">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  id="search"
+                  placeholder="Name, ring number, race..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({...filters, search: e.target.value})}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="race">Race</Label>
+              <Input
+                id="race"
+                placeholder="Race name"
+                value={filters.race}
+                onChange={(e) => setFilters({...filters, race: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="minPlace">Min Place</Label>
+              <Input
+                id="minPlace"
+                type="number"
+                placeholder="1"
+                value={filters.minPlace}
+                onChange={(e) => setFilters({...filters, minPlace: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="maxPlace">Max Place</Label>
+              <Input
+                id="maxPlace"
+                type="number"
+                placeholder="100"
+                value={filters.maxPlace}
+                onChange={(e) => setFilters({...filters, maxPlace: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dateFrom">Date From</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dateTo">Date To</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
+              />
+            </div>
+            
+            <div className="md:col-span-3 lg:col-span-6 flex items-end space-x-2">
+              <Button variant="outline" onClick={resetFilters} className="flex-1">
+                <X className="w-4 h-4 mr-2" />
+                Clear Filters
+              </Button>
+              <div className="text-sm text-gray-500">
+                Showing {filteredResults.length} of {raceResults.length} results
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
