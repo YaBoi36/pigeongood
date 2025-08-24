@@ -1135,6 +1135,12 @@ const MyPigeons = () => {
                   <span className="text-gray-600">Breeder</span>
                   <p className="font-semibold">{pigeon.breeder || '-'}</p>
                 </div>
+                {pigeon.loft && (
+                  <div className="col-span-2">
+                    <span className="text-gray-600">Loft</span>
+                    <p className="font-semibold">{pigeon.loft}</p>
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center justify-between pt-4 border-t">
