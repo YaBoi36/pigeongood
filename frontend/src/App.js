@@ -1159,11 +1159,21 @@ const BreedingPairing = () => {
   const [pigeons, setPigeons] = useState([]);
   const [pairings, setPairings] = useState([]);
   const [addPairingOpen, setAddPairingOpen] = useState(false);
+  const [addResultOpen, setAddResultOpen] = useState(false);
+  const [selectedPairing, setSelectedPairing] = useState(null);
   const [newPairing, setNewPairing] = useState({
     sire_id: "",
     dam_id: "",
     expected_hatch_date: "",
     notes: ""
+  });
+  const [newResult, setNewResult] = useState({
+    ring_number: "",
+    name: "",
+    country: "NL",
+    gender: "",
+    color: "",
+    breeder: ""
   });
   const { toast } = useToast();
 
@@ -1183,10 +1193,8 @@ const BreedingPairing = () => {
 
   const fetchPairings = async () => {
     try {
-      // We'll create this endpoint later
-      // const response = await axios.get(`${API}/pairings`);
-      // setPairings(response.data);
-      setPairings([]); // For now, empty array
+      const response = await axios.get(`${API}/pairings`);
+      setPairings(response.data);
     } catch (error) {
       console.error('Error fetching pairings:', error);
     }
@@ -1212,7 +1220,7 @@ const BreedingPairing = () => {
     }
 
     try {
-      // We'll implement this endpoint later
+      await axios.post(`${API}/pairings`, newPairing);
       toast({
         title: "Success!",
         description: "Pairing recorded successfully",
@@ -1229,7 +1237,45 @@ const BreedingPairing = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to record pairing",
+        description: error.response?.data?.detail || "Failed to record pairing",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddResult = async () => {
+    if (!newResult.ring_number) {
+      toast({
+        title: "Ring Number Required",
+        description: "Please enter a ring number for the new pigeon",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/pairings/${selectedPairing.id}/result`, newResult);
+      toast({
+        title: "Success!",
+        description: "New pigeon created successfully from pairing",
+      });
+      
+      setNewResult({
+        ring_number: "",
+        name: "",
+        country: "NL",
+        gender: "",
+        color: "",
+        breeder: ""
+      });
+      setAddResultOpen(false);
+      setSelectedPairing(null);
+      fetchPigeons();
+      fetchPairings();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create pigeon from pairing",
         variant: "destructive",
       });
     }
