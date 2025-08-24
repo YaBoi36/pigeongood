@@ -248,9 +248,12 @@ def parse_race_file(content: str) -> Dict[str, Any]:
                     except (ValueError, IndexError):
                         unloading_time = "13:00"
             
+            # Construct full race name including category
+            full_race_name = f"{race_name} {category}" if race_name != "Unknown Race" else f"Unknown Race {category}"
+            
             current_race = {
                 'organization': 'De Witpen LUMMEN',
-                'race_name': race_name,
+                'race_name': full_race_name,
                 'date': date or "2025-01-01",
                 'total_pigeons': total_pigeons,
                 'participants': participants,
