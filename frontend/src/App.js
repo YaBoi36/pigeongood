@@ -1964,8 +1964,10 @@ const HealthTraining = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Health Records</p>
-                <p className="text-2xl font-bold text-red-600">{healthLogs.filter(log => log.type === 'health').length}</p>
-                <p className="text-sm text-gray-500">Total entries</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {healthLogs.filter(log => log.type === 'health').length + loftLogs.filter(log => log.type === 'health').length}
+                </p>
+                <p className="text-sm text-gray-500">Individual + Loft entries</p>
               </div>
             </div>
           </CardContent>
@@ -1979,8 +1981,10 @@ const HealthTraining = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Training Sessions</p>
-                <p className="text-2xl font-bold text-blue-600">{healthLogs.filter(log => log.type === 'training').length}</p>
-                <p className="text-sm text-gray-500">Total sessions</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {healthLogs.filter(log => log.type === 'training').length + loftLogs.filter(log => log.type === 'training').length}
+                </p>
+                <p className="text-sm text-gray-500">Individual + Loft sessions</p>
               </div>
             </div>
           </CardContent>
@@ -1994,8 +1998,10 @@ const HealthTraining = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Diet Plans</p>
-                <p className="text-2xl font-bold text-orange-600">{healthLogs.filter(log => log.type === 'diet').length}</p>
-                <p className="text-sm text-gray-500">Total plans</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {healthLogs.filter(log => log.type === 'diet').length + loftLogs.filter(log => log.type === 'diet').length}
+                </p>
+                <p className="text-sm text-gray-500">Individual + Loft plans</p>
               </div>
             </div>
           </CardContent>
