@@ -101,22 +101,32 @@ export class RaceFileParser {
   
   private static isResultLine(line: string): boolean {
     // A result line should start with a number (position) and have multiple parts
-    const parts = line.trim().split(/\s+/);
+    const trimmedLine = line.trim();
     
     // Must start with a number (position)
-    if (!/^\d+$/.test(parts[0])) {
+    if (!/^\s*\d+/.test(trimmedLine)) {
       return false;
     }
     
-    // Must have at least 6 parts: position, name, ring, distance, time, speed
-    if (parts.length < 6) {
+    // Skip lines that are separators
+    if (trimmedLine.includes('---')) {
       return false;
     }
     
-    // Check if it has a ring number pattern (letters and numbers)
-    const hasRingPattern = parts.some(part => /^[A-Z]{1,3}\s*\d{6,9}$/i.test(part.replace(/\s+/g, '')));
+    // Must have reasonable length
+    if (trimmedLine.length < 20) {
+      return false;
+    }
     
-    return hasRingPattern;
+    // Check if it has a ring number pattern (BE followed by numbers)
+    const hasRingPattern = /BE\s+\d{6,9}/.test(line);
+    
+    // Check if it has a speed pattern (decimal number near the end)
+    const hasSpeedPattern = /\d+\.\d+/.test(line);
+    
+    console.log(`Checking result line: "${trimmedLine}" - Ring: ${hasRingPattern}, Speed: ${hasSpeedPattern}`);
+    
+    return hasRingPattern || hasSpeedPattern;
   }
   
   private static containsDate(line: string): boolean {
