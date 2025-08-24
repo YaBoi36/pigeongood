@@ -1433,6 +1433,206 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         print("✅ Data integrity test completed successfully")
         return True
 
+    def test_result_1_file_upload_pipeline(self):
+        """Test the complete race results file upload and parsing pipeline with result_1.txt"""
+        print("\n🔍 Testing Result_1.txt File Upload Pipeline...")
+        
+        # Step 1: Create test pigeons with specific ring numbers from result_1.txt
+        test_pigeons = [
+            {
+                "ring_number": "BE504574322",  # Appears in races 1 and 4
+                "name": "VRANCKEN Test Pigeon",
+                "country": "BE",
+                "gender": "Male",
+                "color": "Blue",
+                "breeder": "VRANCKEN WILLY&DOCHTE"
+            },
+            {
+                "ring_number": "BE504813624",  # Appears in races 2 and 4
+                "name": "BRIERS Test Pigeon", 
+                "country": "BE",
+                "gender": "Female",
+                "color": "Red",
+                "breeder": "BRIERS VALENT.&ZN"
+            },
+            {
+                "ring_number": "BE505078525",  # Appears in race 3
+                "name": "VANGEEL Test Pigeon",
+                "country": "BE",
+                "gender": "Male",
+                "color": "Checker",
+                "breeder": "VANGEEL JO"
+            }
+        ]
+        
+        created_pigeons = []
+        for pigeon_data in test_pigeons:
+            success, response = self.run_test(
+                f"Create Pigeon {pigeon_data['ring_number']}",
+                "POST",
+                "pigeons",
+                200,
+                data=pigeon_data
+            )
+            
+            if success and 'id' in response:
+                created_pigeons.append({
+                    'id': response['id'],
+                    'ring_number': pigeon_data['ring_number']
+                })
+                print(f"   Created pigeon: {pigeon_data['ring_number']} -> ID: {response['id']}")
+            else:
+                print(f"❌ Failed to create pigeon {pigeon_data['ring_number']}")
+        
+        if len(created_pigeons) != len(test_pigeons):
+            print("❌ Failed to create all test pigeons")
+            return False
+        
+        # Step 2: Upload the result_1.txt file
+        try:
+            with open('/app/result_1.txt', 'r') as f:
+                txt_content = f.read()
+        except FileNotFoundError:
+            print("❌ result_1.txt file not found")
+            return False
+        
+        files = {
+            'file': ('result_1.txt', txt_content, 'text/plain')
+        }
+        
+        success, upload_response = self.run_test(
+            "Upload result_1.txt File",
+            "POST", 
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if not success:
+            print("❌ Failed to upload result_1.txt file")
+            return False
+        
+        print(f"   Upload response: {upload_response}")
+        
+        # Step 3: Verify that all 4 races were processed
+        races_processed = upload_response.get('races', 0)
+        if races_processed != 4:
+            print(f"❌ RACE PROCESSING ISSUE: Expected 4 races, got {races_processed}")
+            print(f"   Parsed pigeon counts: {upload_response.get('parsed_pigeon_counts', [])}")
+            return False
+        else:
+            print(f"   ✅ All 4 races processed successfully")
+        
+        # Step 4: Verify that results were created for registered pigeons
+        results_created = upload_response.get('results', 0)
+        if results_created == 0:
+            print(f"❌ RESULT CREATION ISSUE: Expected results for registered pigeons, got {results_created}")
+            return False
+        else:
+            print(f"   ✅ {results_created} results created for registered pigeons")
+        
+        # Step 5: Get race results and verify pigeon-result matching
+        success, results_response = self.run_test(
+            "Get Race Results After Upload",
+            "GET",
+            "race-results",
+            200
+        )
+        
+        if not success:
+            print("❌ Failed to get race results")
+            return False
+        
+        # Step 6: Verify each registered pigeon has exactly 1 result (duplicate prevention)
+        pigeon_results_count = {}
+        matched_results = []
+        
+        for result in results_response:
+            if result.get('pigeon'):
+                pigeon_id = result['pigeon']['id']
+                ring_number = result['ring_number']
+                
+                # Check if this is one of our test pigeons
+                for created_pigeon in created_pigeons:
+                    if created_pigeon['id'] == pigeon_id:
+                        matched_results.append(result)
+                        if ring_number not in pigeon_results_count:
+                            pigeon_results_count[ring_number] = 0
+                        pigeon_results_count[ring_number] += 1
+                        print(f"   ✅ Found result for pigeon {ring_number} in race {result.get('race', {}).get('category', 'Unknown')}")
+                        break
+        
+        # Step 7: Verify duplicate prevention - each pigeon should have exactly 1 result
+        duplicate_prevention_working = True
+        for ring_number, count in pigeon_results_count.items():
+            if count != 1:
+                print(f"❌ DUPLICATE PREVENTION ISSUE: Ring {ring_number} has {count} results (expected 1)")
+                duplicate_prevention_working = False
+            else:
+                print(f"   ✅ Ring {ring_number} has exactly 1 result (duplicate prevention working)")
+        
+        # Step 8: Verify specific ring numbers from review request
+        expected_rings = ["BE504574322", "BE504813624", "BE505078525"]
+        found_rings = list(pigeon_results_count.keys())
+        
+        for expected_ring in expected_rings:
+            if expected_ring in found_rings:
+                print(f"   ✅ Ring number {expected_ring} properly matched and has result")
+            else:
+                print(f"   ❌ Ring number {expected_ring} not found in results")
+        
+        # Step 9: Test uploading the same file again - should not create more results
+        print("\n   🔄 Testing duplicate file upload prevention...")
+        success, second_upload_response = self.run_test(
+            "Upload Same File Again (Should Prevent Duplicates)",
+            "POST",
+            "upload-race-results",
+            200,
+            files=files
+        )
+        
+        if success:
+            second_results_created = second_upload_response.get('results', 0)
+            if second_results_created > 0:
+                print(f"❌ DUPLICATE FILE UPLOAD ISSUE: Second upload created {second_results_created} additional results")
+                duplicate_prevention_working = False
+            else:
+                print(f"   ✅ Second upload created 0 additional results (duplicate prevention working)")
+        
+        # Cleanup - delete created pigeons
+        for pigeon in created_pigeons:
+            self.run_test(
+                f"Cleanup Pigeon {pigeon['ring_number']}",
+                "DELETE",
+                f"pigeons/{pigeon['id']}",
+                200
+            )
+        
+        # Final assessment
+        pipeline_working = (
+            races_processed == 4 and 
+            results_created > 0 and 
+            len(matched_results) > 0 and 
+            duplicate_prevention_working and
+            len(found_rings) == len(expected_rings)
+        )
+        
+        if pipeline_working:
+            print("✅ Result_1.txt upload pipeline test PASSED")
+            print(f"   - All 4 races processed: ✅")
+            print(f"   - Results created for registered pigeons: ✅ ({results_created})")
+            print(f"   - Duplicate prevention working: ✅")
+            print(f"   - All expected ring numbers matched: ✅")
+            return True
+        else:
+            print("❌ Result_1.txt upload pipeline test FAILED")
+            print(f"   - Races processed: {races_processed}/4")
+            print(f"   - Results created: {results_created}")
+            print(f"   - Matched results: {len(matched_results)}")
+            print(f"   - Duplicate prevention: {'✅' if duplicate_prevention_working else '❌'}")
+            print(f"   - Ring numbers found: {len(found_rings)}/{len(expected_rings)}")
+            return False
+
     def test_duplicate_prevention_multi_race_file(self):
         """Test duplicate prevention logic for multi-race files with same date"""
         print("\n🔍 Testing Duplicate Prevention for Multi-Race Files...")
