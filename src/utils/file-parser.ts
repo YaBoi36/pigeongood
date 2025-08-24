@@ -128,13 +128,14 @@ export class RaceFileParser {
     const organisation = this.extractOrganisation(line, lines, index);
     const totalPigeons = this.extractTotalPigeons(lines, index);
     
-    if (raceName && date) {
+    // Only create race if we have at least name and date
+    if (raceName && date && raceName !== 'Unknown Race') {
       return {
         raceName,
         date,
-        organisation: organisation || 'Unknown',
-        totalPigeons: totalPigeons || 100,
-        participants: totalPigeons || 100,
+        organisation: organisation || 'Racing Federation',
+        totalPigeons: totalPigeons || 357,
+        participants: totalPigeons || 357,
         unloadingTime: '06:00:00'
       };
     }
@@ -143,20 +144,26 @@ export class RaceFileParser {
   }
   
   private static extractRaceName(line: string, lines: string[], index: number): string {
-    // Try to extract race name from current line or nearby lines
-    const racePattern = /([A-Z][a-zA-Z\s]+)/;
-    const match = line.match(racePattern);
-    if (match) {
-      return match[1].trim();
+    // Try to extract race name from current line
+    if (line.includes('UITSLAGEN') || line.includes('RESULTATEN') || line.includes('RESULTS')) {
+      // Look in nearby lines for the actual race name
+      for (let i = Math.max(0, index - 3); i <= Math.min(lines.length - 1, index + 3); i++) {
+        const checkLine = lines[i].trim();
+        if (checkLine && 
+            !checkLine.includes('UITSLAGEN') && 
+            !checkLine.includes('RESULTATEN') &&
+            !checkLine.includes('RESULTS') &&
+            !checkLine.startsWith('NR') &&
+            checkLine.length > 5 &&
+            checkLine.length < 50) {
+          return checkLine;
+        }
+      }
     }
     
-    // Look in previous lines for race name
-    for (let i = Math.max(0, index - 5); i < index; i++) {
-      const prevLine = lines[i];
-      const prevMatch = prevLine.match(racePattern);
-      if (prevMatch && prevMatch[1].length > 3) {
-        return prevMatch[1].trim();
-      }
+    // If current line looks like a race name (not too long, has spaces, no numbers at start)
+    if (line.length > 5 && line.length < 50 && line.includes(' ') && !/^\d/.test(line)) {
+      return line.trim();
     }
     
     return 'Unknown Race';
@@ -166,16 +173,25 @@ export class RaceFileParser {
     // Look for date patterns in current and nearby lines
     const datePattern = /(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4})/;
     
-    for (let i = Math.max(0, index - 3); i <= Math.min(lines.length - 1, index + 3); i++) {
+    for (let i = Math.max(0, index - 5); i <= Math.min(lines.length - 1, index + 5); i++) {
       const match = lines[i].match(datePattern);
       if (match) {
         const dateStr = match[1];
         // Convert to ISO format
         const parts = dateStr.split(/[-/.]/);
         if (parts.length === 3) {
-          const [day, month, year] = parts;
-          const fullYear = year.length === 2 ? `20${year}` : year;
-          return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          let [day, month, year] = parts;
+          
+          // Handle different date formats
+          if (year.length === 2) {
+            year = `20${year}`;
+          }
+          
+          // Ensure month and day are 2 digits
+          month = month.padStart(2, '0');
+          day = day.padStart(2, '0');
+          
+          return `${year}-${month}-${day}`;
         }
       }
     }
@@ -190,7 +206,8 @@ export class RaceFileParser {
       /BOND/i,
       /CLUB/i,
       /VERENIGING/i,
-      /UNION/i
+      /UNION/i,
+      /FEDERATION/i
     ];
     
     for (let i = Math.max(0, index - 5); i <= Math.min(lines.length - 1, index + 2); i++) {
@@ -207,11 +224,26 @@ export class RaceFileParser {
   
   private static extractTotalPigeons(lines: string[], index: number): number {
     // Look for total pigeon count in nearby lines
-    for (let i = Math.max(0, index - 5); i <= Math.min(lines.length - 1, index + 10); i++) {
+    for (let i = Math.max(0, index - 10); i <= Math.min(lines.length - 1, index + 15); i++) {
       const line = lines[i];
-      const match = line.match(/(\d{2,4})\s*duiven/i) || line.match(/Total:\s*(\d{2,4})/i);
-      if (match) {
-        return parseInt(match[1], 10);
+      
+      // Look for patterns like "357 duiven", "Total: 357", etc.
+      const patterns = [
+        /(\d{2,4})\s*duiven/i,
+        /(\d{2,4})\s*pigeons/i,
+        /Total:\s*(\d{2,4})/i,
+        /(\d{2,4})\s*deelnemers/i,
+        /(\d{2,4})\s*participants/i
+      ];
+      
+      for (const pattern of patterns) {
+        const match = line.match(pattern);
+        if (match) {
+          const count = parseInt(match[1], 10);
+          if (count >= 10 && count <= 5000) {  // Reasonable pigeon count range
+            return count;
+          }
+        }
       }
     }
     
