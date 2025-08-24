@@ -1946,12 +1946,12 @@ const HealthTraining = () => {
             
             <div>
               <Label htmlFor="pigeon_filter">Pigeon</Label>
-              <Select onValueChange={(value) => setFilters({...filters, pigeon: value})}>
+              <Select onValueChange={(value) => setFilters({...filters, pigeon: value === "all" ? "" : value})}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Pigeons" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Pigeons</SelectItem>
+                  <SelectItem value="all">All Pigeons</SelectItem>
                   {pigeons.map((pigeon) => (
                     <SelectItem key={pigeon.id} value={pigeon.id}>
                       {pigeon.name || 'Unnamed'} - {pigeon.ring_number}
