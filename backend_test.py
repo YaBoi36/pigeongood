@@ -9,8 +9,8 @@ import json
 import os
 from datetime import datetime
 
-# Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://flight-results-1.preview.emergentagent.com')
+# Get backend URL from environment - use localhost for testing since external routing has issues
+BACKEND_URL = "http://localhost:8001"
 API_BASE = f"{BACKEND_URL}/api"
 
 class BackendTester:
