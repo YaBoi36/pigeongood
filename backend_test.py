@@ -1170,9 +1170,12 @@ NR  Naam                Ring        Afstand  Tijd      Snelheid
         """Test that both individual health logs and loft logs work together"""
         print("\n🔍 Testing Combined Log Systems...")
         
-        # Step 1: Create a pigeon for individual health logs
+        # Step 1: Create a pigeon for individual health logs with unique ring number
+        import time
+        timestamp = str(int(time.time()))[-6:]
+        
         pigeon_data = {
-            "ring_number": "BE999888777",
+            "ring_number": f"BE{timestamp}999",
             "name": "Combined Test Pigeon",
             "country": "BE",
             "gender": "Male",
