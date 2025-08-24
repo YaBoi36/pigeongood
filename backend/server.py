@@ -89,6 +89,50 @@ class RaceResultWithDetails(BaseModel):
     pigeon: Optional[Pigeon] = None
     race: Optional[Race] = None
 
+class Pairing(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sire_id: str  # Father pigeon ID
+    dam_id: str   # Mother pigeon ID
+    expected_hatch_date: Optional[str] = None
+    notes: Optional[str] = None
+    status: str = "active"  # active, completed, cancelled
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PairingCreate(BaseModel):
+    sire_id: str
+    dam_id: str
+    expected_hatch_date: Optional[str] = None
+    notes: Optional[str] = None
+
+class PairingResult(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    pairing_id: str
+    ring_number: str
+    name: Optional[str] = None
+    country: str = "NL"
+    gender: Optional[str] = None
+    color: Optional[str] = None
+    breeder: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class HealthLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    pigeon_id: str
+    type: str  # health, training, diet
+    title: str
+    description: Optional[str] = None
+    date: str
+    reminder_date: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class HealthLogCreate(BaseModel):
+    pigeon_id: str
+    type: str
+    title: str
+    description: Optional[str] = None
+    date: str
+    reminder_date: Optional[str] = None
+
 class PigeonStats(BaseModel):
     total_races: int
     total_wins: int
