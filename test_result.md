@@ -228,6 +228,21 @@ backend:
         agent: "testing"
         comment: "COMPREHENSIVE DUPLICATE PREVENTION TESTING COMPLETED: ✅ All 101 backend API tests passed including dedicated duplicate prevention test ✅ CORE LOGIC VERIFIED: Lines 518-533 in server.py correctly prevent multiple results for same pigeon on same date ✅ MULTI-RACE FILE HANDLING: System correctly processes result_new.txt with 4 CHIMAY races from same date (09-08-25) without creating duplicates ✅ DATE-BASED PREVENTION: Each pigeon limited to one result per date regardless of race category ✅ DUPLICATE FILE UPLOAD PREVENTION: Re-uploading same file doesn't create additional results ✅ RACE CREATION LOGIC: Multiple races allowed for same date with different categories (expected behavior) ✅ LOGGING VERIFICATION: System properly logs 'Skipping duplicate result for ring [ring_number] on date [date]' when preventing duplicates. Duplicate prevention fix is working correctly as specified in the review request."
 
+  - task: "Fix race results file upload and parsing pipeline for result_1.txt"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL PIPELINE ISSUES IDENTIFIED: User reports uploading 'result_1.txt' results in no race results being created despite successful duplicate prevention. System processes only 2 out of 4 races and creates 0 results for registered pigeons with matching ring numbers (BE504574322, BE504813624, BE505078525). Expected behavior: all 4 races processed, results created for registered pigeons, duplicate prevention working correctly."
+      - working: true
+        agent: "testing"
+        comment: "PIPELINE ISSUES FIXED: ✅ ROOT CAUSE IDENTIFIED: Column header detection logic on line 264 was incorrectly matching result lines containing keywords like 'NAAM', 'RING', etc. Fixed by adding condition to exclude lines starting with numbers from header detection. ✅ ALL 4 RACES NOW PROCESSED: result_1.txt correctly processes all races (32 Oude, 26 Jaarduiven, 462 Jongen, 58 Oude+jaarse) ✅ RESULTS CREATED FOR REGISTERED PIGEONS: All 3 test ring numbers (BE504574322, BE504813624, BE505078525) now properly match and create results ✅ DUPLICATE PREVENTION WORKING: Each pigeon gets exactly 1 result per date, even when appearing in multiple races ✅ COMPREHENSIVE TESTING: Created dedicated test suite (result_1_pipeline_test.py) that validates complete upload->parsing->result creation pipeline. Fix resolves all issues mentioned in review request."
+
 frontend:
   - task: "Verify pigeon deletion and race result display"
     implemented: true
