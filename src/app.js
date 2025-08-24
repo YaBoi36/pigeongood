@@ -450,14 +450,12 @@ app.post('/api/confirm-race-upload', upload.single('file'), async (req, res) => 
             ring_number: result.ring_number
           }).toArray();
           
-          let hasResultForRaceAndDate = false;
+          let hasResultForDate = false;
           for (const existingResult of existingResultsForPigeon) {
             const existingRace = await db.collection('races').findOne({ id: existingResult.race_id });
-            if (existingRace && 
-                existingRace.race_name === currentRace.race_name && 
-                existingRace.date === currentRace.date) {
-              hasResultForRaceAndDate = true;
-              console.log(`Skipping duplicate result for ring ${result.ring_number} in race "${currentRace.race_name}" on date ${currentRace.date} - pigeon already has result for this race and date`);
+            if (existingRace && existingRace.date === currentRace.date) {
+              hasResultForDate = true;
+              console.log(`Skipping duplicate result for ring ${result.ring_number} on date ${currentRace.date} - pigeon already has result for this date (existing race: "${existingRace.race_name}", current race: "${currentRace.race_name}")`);
               break;
             }
           }
