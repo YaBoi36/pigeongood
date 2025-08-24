@@ -1,8 +1,14 @@
+#!/usr/bin/env python3
+"""
+Duplicate Prevention Test for Multi-Race Files
+Tests the fix for race results with multi-race files to ensure each pigeon only gets ONE result per date.
+"""
+
 import requests
 import sys
 import json
-import io
 from datetime import datetime
+import time
 
 class DuplicatePreventionTester:
     def __init__(self, base_url="https://race-loft.preview.emergentagent.com"):
@@ -10,8 +16,7 @@ class DuplicatePreventionTester:
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
         self.tests_passed = 0
-        self.created_pigeons = []
-        self.created_races = []
+        self.created_pigeon_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
         """Run a single API test"""
