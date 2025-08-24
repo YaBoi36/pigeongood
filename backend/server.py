@@ -395,7 +395,8 @@ async def get_pigeons(search: Optional[str] = None):
                 {"name": {"$regex": search, "$options": "i"}},
                 {"ring_number": {"$regex": search, "$options": "i"}},
                 {"breeder": {"$regex": search, "$options": "i"}},
-                {"color": {"$regex": search, "$options": "i"}}
+                {"color": {"$regex": search, "$options": "i"}},
+                {"loft": {"$regex": search, "$options": "i"}}
             ]
         }
     
