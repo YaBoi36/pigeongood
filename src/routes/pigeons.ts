@@ -6,7 +6,7 @@ import { Pigeon, PigeonCreate } from '../types';
 const router = Router();
 
 // Get all pigeons with optional search
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { search } = req.query;
     let query: any = {};
