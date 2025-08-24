@@ -1457,6 +1457,13 @@ def main():
     test_results.append(tester.test_get_race_results())
     test_results.append(tester.test_get_pigeon_stats())
     
+    # LATEST FIXES TESTING - Ring Number Fix and Loft Logs
+    print("\n" + "🔧" * 20 + " LATEST FIXES TESTING " + "🔧" * 20)
+    test_results.append(tester.test_ring_number_fix_in_pairing())
+    test_results.append(tester.test_loft_log_functionality())
+    test_results.append(tester.test_combined_log_systems())
+    test_results.append(tester.test_data_integrity_after_updates())
+    
     # NEW FUNCTIONALITY TESTS
     print("\n" + "🆕" * 20 + " NEW FUNCTIONALITY TESTS " + "🆕" * 20)
     test_results.append(tester.test_pairing_functionality())
