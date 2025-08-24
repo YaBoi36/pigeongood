@@ -554,8 +554,8 @@ const RaceResults = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="sm:col-span-2 lg:col-span-2 xl:col-span-2">
               <Label htmlFor="search">Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -579,7 +579,7 @@ const RaceResults = () => {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <Label htmlFor="minPlace">Min Place</Label>
               <Input
                 id="minPlace"
@@ -590,7 +590,7 @@ const RaceResults = () => {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <Label htmlFor="maxPlace">Max Place</Label>
               <Input
                 id="maxPlace"
@@ -601,7 +601,7 @@ const RaceResults = () => {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <Label htmlFor="dateFrom">Date From</Label>
               <Input
                 id="dateFrom"
@@ -611,7 +611,7 @@ const RaceResults = () => {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <Label htmlFor="dateTo">Date To</Label>
               <Input
                 id="dateTo"
@@ -621,13 +621,13 @@ const RaceResults = () => {
               />
             </div>
             
-            <div className="md:col-span-3 lg:col-span-6 flex items-end space-x-2">
-              <Button variant="outline" onClick={resetFilters} className="flex-1">
+            <div className="sm:col-span-2 lg:col-span-2 xl:col-span-1 flex flex-col justify-end space-y-2">
+              <Button variant="outline" onClick={resetFilters} className="w-full">
                 <X className="w-4 h-4 mr-2" />
                 Clear Filters
               </Button>
-              <div className="text-sm text-gray-500">
-                Showing {filteredResults.length} of {raceResults.length} results
+              <div className="text-xs text-gray-500 text-center">
+                {filteredResults.length} of {raceResults.length} results
               </div>
             </div>
           </div>
