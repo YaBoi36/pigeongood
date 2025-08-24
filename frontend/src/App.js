@@ -527,6 +527,10 @@ const RaceResults = () => {
                     <p className="text-gray-500">Date</p>
                   </div>
                   <div className="text-center">
+                    <p className="font-semibold">{result.race?.participants || 0}</p>
+                    <p className="text-gray-500">Participants</p>
+                  </div>
+                  <div className="text-center">
                     <p className="font-semibold">{(result.distance / 1000).toFixed(1)}km</p>
                     <p className="text-gray-500">Distance</p>
                   </div>
