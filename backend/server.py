@@ -141,6 +141,24 @@ class HealthLogCreate(BaseModel):
     date: str
     reminder_date: Optional[str] = None
 
+class LoftLogCreate(BaseModel):
+    loft_name: str  # Breeder/Loft name
+    type: str  # health, training, diet
+    title: str
+    description: Optional[str] = None
+    date: str
+    reminder_date: Optional[str] = None
+
+class LoftLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    loft_name: str
+    type: str
+    title: str
+    description: Optional[str] = None
+    date: str
+    reminder_date: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 class PigeonStats(BaseModel):
     total_races: int
     total_wins: int
