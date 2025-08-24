@@ -708,53 +708,108 @@ const RaceResults = () => {
         <CardContent>
           <div className="space-y-4">
             {filteredResults.map((result) => (
-              <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Badge variant="outline" className="text-xs font-bold">
-                      #{result.position}
-                    </Badge>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{result.pigeon?.name || 'Unknown'}</h3>
-                    <p className="text-sm text-gray-500">Ring: {result.ring_number}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-8 text-sm">
-                  <div className="text-center">
-                    <p className="font-semibold">{result.race?.race_name}</p>
-                    <p className="text-gray-500">Race</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold">{result.race?.date}</p>
-                    <p className="text-gray-500">Date</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold">{result.race?.total_pigeons || 0}</p>
-                    <p className="text-gray-500">Pigeons</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold">{(result.distance / 1000).toFixed(1)}km</p>
-                    <p className="text-gray-500">Distance</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold">{result.speed.toFixed(1)}</p>
-                    <p className="text-gray-500">Speed</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold">{result.coefficient.toFixed(2)}</p>
-                    <p className="text-gray-500">Coefficient</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
+              <div key={result.id} className="border rounded-lg hover:bg-gray-50">
+                {/* Mobile Layout */}
+                <div className="lg:hidden p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <Badge variant="outline" className="text-xs font-bold">
+                          #{result.position}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm">{result.pigeon?.name || 'Unknown'}</h3>
+                        <p className="text-xs text-gray-500">Ring: {result.ring_number}</p>
+                      </div>
+                    </div>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleDeleteRaceResult(result.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-gray-500">Race</p>
+                      <p className="font-semibold">{result.race?.race_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Date</p>
+                      <p className="font-semibold">{result.race?.date}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Pigeons</p>
+                      <p className="font-semibold">{result.race?.total_pigeons || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Distance</p>
+                      <p className="font-semibold">{(result.distance / 1000).toFixed(1)}km</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Speed</p>
+                      <p className="font-semibold">{result.speed.toFixed(1)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Coefficient</p>
+                      <p className="font-semibold">{result.coefficient.toFixed(2)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden lg:flex items-center justify-between p-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Badge variant="outline" className="text-xs font-bold">
+                        #{result.position}
+                      </Badge>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{result.pigeon?.name || 'Unknown'}</h3>
+                      <p className="text-sm text-gray-500">Ring: {result.ring_number}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-8 text-sm">
+                    <div className="text-center">
+                      <p className="font-semibold">{result.race?.race_name}</p>
+                      <p className="text-gray-500">Race</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold">{result.race?.date}</p>
+                      <p className="text-gray-500">Date</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold">{result.race?.total_pigeons || 0}</p>
+                      <p className="text-gray-500">Pigeons</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold">{(result.distance / 1000).toFixed(1)}km</p>
+                      <p className="text-gray-500">Distance</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold">{result.speed.toFixed(1)}</p>
+                      <p className="text-gray-500">Speed</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold">{result.coefficient.toFixed(2)}</p>
+                      <p className="text-gray-500">Coefficient</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteRaceResult(result.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
