@@ -138,7 +138,7 @@ router.post('/upload-race-results', upload.single('file'), async (req: Request, 
 });
 
 // Clear test data
-router.delete('/clear-test-data', async (req: Request, res: Response) => {
+router.delete('/clear-test-data', async (req: Request, res: Response): Promise<void> => {
   try {
     const raceResult = await database.raceResults.deleteMany({});
     const raceDeleteResult = await database.races.deleteMany({});
