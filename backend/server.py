@@ -815,18 +815,15 @@ async def create_pairing_result(pairing_id: str, result: PairingResultCreate):
     
     return {"message": "Pairing result created successfully", "pigeon": new_pigeon}
 
-# Health log endpoints
-@api_router.post("/health-logs", response_model=HealthLog)
-async def create_health_log(log: HealthLogCreate):
-    # Validate pigeon exists
-    pigeon = await db.pigeons.find_one({"id": log.pigeon_id})
-    if not pigeon:
-        raise HTTPException(status_code=404, detail="Pigeon not found")
+# Loft log endpoints
+@api_router.post("/loft-logs", response_model=LoftLog)
+async def create_loft_log(log: LoftLogCreate):
+    # No validation needed for loft_name as it's just a string identifier
     
     log_dict = log.dict()
-    log_obj = HealthLog(**log_dict)
+    log_obj = LoftLog(**log_dict)
     log_data = prepare_for_mongo(log_obj.dict())
-    await db.health_logs.insert_one(log_data)
+    await db.loft_logs.insert_one(log_data)
     return log_obj
 
 @api_router.get("/health-logs", response_model=List[HealthLog])
