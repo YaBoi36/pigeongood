@@ -35,7 +35,7 @@ router.get('/race-results', async (req: Request, res: Response): Promise<void> =
 });
 
 // Delete race result
-router.delete('/race-results/:id', async (req: Request, res: Response) => {
+router.delete('/race-results/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     
