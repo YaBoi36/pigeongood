@@ -542,6 +542,28 @@ app.delete('/api/race-results/:id', async (req, res) => {
   }
 });
 
+// Get dashboard statistics
+app.get('/api/dashboard-stats', async (req, res) => {
+  try {
+    const totalPigeons = await db.collection('pigeons').countDocuments();
+    const totalRaces = await db.collection('races').countDocuments();
+    const totalResults = await db.collection('race_results').countDocuments();
+    
+    // Calculate wins (position 1)
+    const totalWins = await db.collection('race_results').countDocuments({ position: 1 });
+    
+    res.json({
+      total_pigeons: totalPigeons,
+      total_races: totalRaces,
+      total_results: totalResults,
+      total_wins: totalWins
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ detail: 'Failed to fetch dashboard statistics' });
+  }
+});
+
 // Clear test data
 app.delete('/api/clear-test-data', async (req, res) => {
   try {
