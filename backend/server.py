@@ -837,12 +837,12 @@ async def get_loft_logs(loft_name: Optional[str] = None, type: Optional[str] = N
     logs = await db.loft_logs.find(query).sort("date", -1).to_list(1000)
     return [LoftLog(**parse_from_mongo(log)) for log in logs]
 
-@api_router.delete("/health-logs/{log_id}")
-async def delete_health_log(log_id: str):
-    result = await db.health_logs.delete_one({"id": log_id})
+@api_router.delete("/loft-logs/{log_id}")
+async def delete_loft_log(log_id: str):
+    result = await db.loft_logs.delete_one({"id": log_id})
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Health log not found")
-    return {"message": "Health log deleted successfully"}
+        raise HTTPException(status_code=404, detail="Loft log not found")
+    return {"message": "Loft log deleted successfully"}
 
 # Include the router in the main app
 app.include_router(api_router)
