@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import multer, { MulterError } from 'multer';
 import database from '../utils/database';
-import { RaceFileParser } from '../utils/file-parser';
+import { parseRaceFile } from '../utils/file-parser';
 import { RaceResultWithDetails } from '../types';
 
 const router = Router();
