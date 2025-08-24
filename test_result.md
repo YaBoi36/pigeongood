@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Fix ring number matching issue where newly added pigeons don't show race results despite having matching ring numbers in uploaded TXT files. Also implement cascade deletion so race results are removed when pigeons are deleted.
+user_problem_statement: Clear all existing test data from the system so the user can test with a clean slate. Clear all race results, races, and registered pigeons from the database. Verify the system is clean (0 pigeons, 0 races, 0 race results) and test basic functionality to ensure the system still works after clearing.
 
 backend:
   - task: "Fix ring number parsing and matching logic"
