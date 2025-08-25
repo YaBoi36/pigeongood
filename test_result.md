@@ -261,6 +261,21 @@ backend:
         agent: "testing"
         comment: "PIPELINE ISSUES FIXED: ✅ ROOT CAUSE IDENTIFIED: Column header detection logic on line 264 was incorrectly matching result lines containing keywords like 'NAAM', 'RING', etc. Fixed by adding condition to exclude lines starting with numbers from header detection. ✅ ALL 4 RACES NOW PROCESSED: result_1.txt correctly processes all races (32 Oude, 26 Jaarduiven, 462 Jongen, 58 Oude+jaarse) ✅ RESULTS CREATED FOR REGISTERED PIGEONS: All 3 test ring numbers (BE504574322, BE504813624, BE505078525) now properly match and create results ✅ DUPLICATE PREVENTION WORKING: Each pigeon gets exactly 1 result per date, even when appearing in multiple races ✅ COMPREHENSIVE TESTING: Created dedicated test suite (result_1_pipeline_test.py) that validates complete upload->parsing->result creation pipeline. Fix resolves all issues mentioned in review request."
 
+  - task: "Investigate race results count discrepancy - success message vs database"
+    implemented: true
+    working: true
+    file: "/app/backend/app.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "URGENT INVESTIGATION: User reports seeing 'Success! 4 races and 289 results processed' message but frontend shows 0 race results in database. Need to verify if file upload actually creates race results, check database state, test upload endpoints, and debug upload logic with user's specific file and pigeon BE504813624."
+      - working: true
+        agent: "testing"
+        comment: "CRITICAL RACE RESULTS COUNT INVESTIGATION COMPLETED: ✅ ROOT CAUSE IDENTIFIED: The success message 'Success! 4 races and 289 results processed' is MISLEADING - it refers to results PARSED from file, not INSERTED into database ✅ SYSTEM WORKING CORRECTLY: Backend correctly creates race results ONLY for REGISTERED pigeons (expected behavior) ✅ USER WORKFLOW ISSUE: User sees success message but gets 0 results because their pigeons are not registered before upload ✅ COMPREHENSIVE TESTING: Created specialized test suites (race_results_investigation_test.py, detailed_upload_debug_test.py) that prove system works correctly when pigeons are pre-registered ✅ VERIFIED WITH USER'S PIGEON: BE504813624 correctly gets race results when registered before upload ✅ DUPLICATE PREVENTION WORKING: System correctly prevents duplicate results on re-upload ✅ DATABASE VERIFICATION: All API endpoints working correctly, race results accessible via /api/race-results ✅ DIAGNOSIS: User's issue is caused by misleading success message and incorrect workflow (not registering pigeons first). Backend is functioning perfectly - no bugs found. Success message should distinguish between parsed vs inserted results to avoid user confusion."
+
 frontend:
   - task: "Verify pigeon deletion and race result display"
     implemented: true
