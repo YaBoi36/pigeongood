@@ -43,8 +43,8 @@ import { useToast } from "./hooks/use-toast";
 import { Toaster } from "./components/ui/toaster";
 import { Textarea } from "./components/ui/textarea";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
 
 // Sidebar Navigation Component
 const Sidebar = ({ activeTab, setActiveTab, isMobileOpen, setIsMobileOpen }) => {
