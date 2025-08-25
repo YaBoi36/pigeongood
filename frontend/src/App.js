@@ -457,13 +457,22 @@ const RaceResults = () => {
     formData.append('file', file);
 
     try {
-      const response = await axios.post(`${API}/upload-race-results`, formData, {
+      // First, parse the file to get statistics
+      const parseResponse = await axios.post(`${API}/upload-race-results`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      // Then, confirm and process to actually create the race results
+      const confirmFormData = new FormData();
+      confirmFormData.append('file', file);
+      
+      const confirmResponse = await axios.post(`${API}/confirm-race-upload`, confirmFormData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       toast({
         title: "Success!",
-        description: `Processed ${response.data.races} races with ${response.data.results} results`,
+        description: `Processed ${confirmResponse.data.races} races with ${confirmResponse.data.results} results`,
       });
 
       setFile(null);
