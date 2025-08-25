@@ -473,7 +473,7 @@ app.post('/api/confirm-race-upload', upload.single('file'), async (req, res) => 
             }
           }
           
-          if (hasResultForDate) {
+          if (hasResultForRaceAndDate) {
             continue;
           }
         }
