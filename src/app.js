@@ -621,4 +621,133 @@ process.on('SIGTERM', async () => {
 
 startServer();
 
+// Pairing Endpoints
+
+// Get all pairings
+app.get('/api/pairings', async (req, res) => {
+  try {
+    const pairings = await db.collection('pairings').find({}).toArray();
+    const parsedPairings = pairings.map(parseFromMongo);
+    
+    res.json(parsedPairings);
+  } catch (error) {
+    console.error('Error fetching pairings:', error);
+    res.status(500).json({ detail: 'Failed to fetch pairings' });
+  }
+});
+
+// Create new pairing
+app.post('/api/pairings', async (req, res) => {
+  try {
+    const pairingData = req.body;
+    
+    // Validate that both pigeons exist
+    const sire = await db.collection('pigeons').findOne({ id: pairingData.sire_id });
+    const dam = await db.collection('pigeons').findOne({ id: pairingData.dam_id });
+    
+    if (!sire) {
+      return res.status(404).json({ detail: 'Sire (father) pigeon not found' });
+    }
+    if (!dam) {
+      return res.status(404).json({ detail: 'Dam (mother) pigeon not found' });
+    }
+    
+    // Validate gender if available
+    if (sire.gender && sire.gender.toLowerCase() !== 'male') {
+      return res.status(400).json({ detail: 'Sire must be male' });
+    }
+    if (dam.gender && dam.gender.toLowerCase() !== 'female') {
+      return res.status(400).json({ detail: 'Dam must be female' });
+    }
+    
+    const newPairing = {
+      id: uuidv4(),
+      sire_id: pairingData.sire_id,
+      dam_id: pairingData.dam_id,
+      expected_hatch_date: pairingData.expected_hatch_date,
+      notes: pairingData.notes || '',
+      status: 'active',
+      created_at: new Date()
+    };
+    
+    const pairingForMongo = prepareForMongo(newPairing);
+    await db.collection('pairings').insertOne(pairingForMongo);
+    
+    res.json(parseFromMongo(newPairing));
+  } catch (error) {
+    console.error('Error creating pairing:', error);
+    res.status(500).json({ detail: 'Failed to create pairing' });
+  }
+});
+
+// Create offspring from pairing
+app.post('/api/pairings/:pairing_id/result', async (req, res) => {
+  try {
+    const { pairing_id } = req.params;
+    const resultData = req.body;
+    
+    // Validate pairing exists
+    const pairing = await db.collection('pairings').findOne({ id: pairing_id });
+    if (!pairing) {
+      return res.status(404).json({ detail: 'Pairing not found' });
+    }
+    
+    // Get parent pigeons for pedigree info
+    const sire = await db.collection('pigeons').findOne({ id: pairing.sire_id });
+    const dam = await db.collection('pigeons').findOne({ id: pairing.dam_id });
+    
+    // Create full ring number
+    const fullRingNumber = `${resultData.country}${resultData.ring_number}`;
+    
+    // Check for duplicate ring number
+    const existingPigeon = await db.collection('pigeons').findOne({ ring_number: fullRingNumber });
+    if (existingPigeon) {
+      return res.status(400).json({ 
+        detail: `A pigeon with ring number ${fullRingNumber} already exists` 
+      });
+    }
+    
+    // Create new pigeon (offspring)
+    const newPigeon = {
+      id: uuidv4(),
+      ring_number: fullRingNumber,
+      name: resultData.name || '',
+      gender: resultData.gender,
+      birth_year: parseInt(resultData.birth_year) || new Date().getFullYear(),
+      color: resultData.color || '',
+      country: resultData.country,
+      breeder: resultData.breeder || '',
+      loft: resultData.loft || '',
+      sire_ring: sire?.ring_number || '',
+      dam_ring: dam?.ring_number || '',
+      created_at: new Date()
+    };
+    
+    const pigeonForMongo = prepareForMongo(newPigeon);
+    await db.collection('pigeons').insertOne(pigeonForMongo);
+    
+    // Create pairing result record
+    const pairingResult = {
+      id: uuidv4(),
+      pairing_id: pairing_id,
+      pigeon_id: newPigeon.id,
+      ring_number: fullRingNumber,
+      birth_date: resultData.birth_date,
+      notes: resultData.notes || '',
+      created_at: new Date()
+    };
+    
+    const resultForMongo = prepareForMongo(pairingResult);
+    await db.collection('pairing_results').insertOne(resultForMongo);
+    
+    res.json({
+      pigeon: parseFromMongo(newPigeon),
+      pairing_result: parseFromMongo(pairingResult)
+    });
+  } catch (error) {
+    console.error('Error creating pairing result:', error);
+    res.status(500).json({ detail: 'Failed to create pairing result' });
+  }
+});
+
 module.exports = app;
