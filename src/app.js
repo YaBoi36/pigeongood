@@ -312,6 +312,17 @@ app.get('/api/pigeons', async (req, res) => {
 // Create pigeon
 app.post('/api/pigeons', async (req, res) => {
   try {
+    // Check for duplicate ring number
+    const { ring_number } = req.body;
+    if (ring_number) {
+      const existingPigeon = await db.collection('pigeons').findOne({ ring_number: ring_number });
+      if (existingPigeon) {
+        return res.status(400).json({ 
+          detail: `A pigeon with ring number ${ring_number} already exists` 
+        });
+      }
+    }
+
     const pigeonData = {
       id: uuidv4(),
       ...req.body,
